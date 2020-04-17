@@ -5,7 +5,7 @@ import { parseHTML } from './html-parser'
 import { parseText } from './text-parser'
 import { parseFilters } from './filter-parser'
 import { genAssignmentCode } from '../directives/model'
-import { extend, cached, no, camelize, hyphenate } from 'shared/util'
+import { extend, cached, no, camelize, hyphenate } from 'shared/util' // no是永远返回false的函数
 import { isIE, isEdge, isServerRendering } from 'core/util/env'
 
 import {
@@ -52,9 +52,9 @@ let delimiters
 let transforms
 let preTransforms
 let postTransforms
-let platformIsPreTag
-let platformMustUseProp
-let platformGetTagNamespace
+let platformIsPreTag // 函数：标签是否需要保留空白
+let platformMustUseProp // 函数：特性（attribute）是否需要被绑定为属性（property）
+let platformGetTagNamespace // 函数：检查标签的命名空间
 let maybeComponent
 
 export function createASTElement (
@@ -76,21 +76,26 @@ export function createASTElement (
 /**
  * Convert HTML string to AST.
  */
+/**
+ *
+ * @param {string} template 模板
+ * @param {CompilerOptions} options 编译器配置对象，类型定义在flow/compiler.js中
+ */
 export function parse (
   template: string,
   options: CompilerOptions
 ): ASTElement | void {
   warn = options.warn || baseWarn
 
-  platformIsPreTag = options.isPreTag || no
-  platformMustUseProp = options.mustUseProp || no
-  platformGetTagNamespace = options.getTagNamespace || no
+  platformIsPreTag = options.isPreTag || no // 函数：标签是否需要保留空白
+  platformMustUseProp = options.mustUseProp || no // 函数：特性（attribute）是否需要被绑定为属性（property）
+  platformGetTagNamespace = options.getTagNamespace || no // 函数：检查标签的命名空间
   const isReservedTag = options.isReservedTag || no
   maybeComponent = (el: ASTElement) => !!el.component || !isReservedTag(el.tag)
 
-  transforms = pluckModuleFunction(options.modules, 'transformNode')
-  preTransforms = pluckModuleFunction(options.modules, 'preTransformNode')
-  postTransforms = pluckModuleFunction(options.modules, 'postTransformNode')
+  transforms = pluckModuleFunction(options.modules, 'transformNode') // 返回平台特殊模块配置中，属性名为transformNode的非空值
+  preTransforms = pluckModuleFunction(options.modules, 'preTransformNode') // 返回平台特殊模块配置中，属性名为preTransformNode的非空值
+  postTransforms = pluckModuleFunction(options.modules, 'postTransformNode') // 返回平台特殊模块配置中，属性名为postTransformNode的非空值
 
   delimiters = options.delimiters
 

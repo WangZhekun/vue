@@ -6,11 +6,20 @@ import { parseFilters } from './parser/filter-parser'
 type Range = { start?: number, end?: number };
 
 /* eslint-disable no-unused-vars */
+/**
+ * 控制台打印错误
+ * @param {string} msg 错误信息
+ */
 export function baseWarn (msg: string, range?: Range) {
   console.error(`[Vue compiler]: ${msg}`)
 }
 /* eslint-enable no-unused-vars */
 
+/**
+ * 获取modules中属性名为key的属性值，过滤掉空值
+ * @param {Array<Object>} modules 模块数组
+ * @param {string} key 属性名
+ */
 export function pluckModuleFunction<F: Function> (
   modules: ?Array<Object>,
   key: string

@@ -1,7 +1,11 @@
 /* @flow */
 
+/**
+ * 该文件是几种编译模式的入口，包括浏览器的运行时+编译器开发/生产模式的模块
+ */
+
 import config from 'core/config'
-import { warn, cached } from 'core/util/index'
+import { warn, cached } from 'core/util/index' // warn来自src/core/util/debug.js，实际是src/shared/util.js中的noop函数，noop是空函数 cached来自src/shared/util.js
 import { mark, measure } from 'core/util/perf'
 
 import Vue from './runtime/index'
@@ -9,20 +13,30 @@ import { query } from './util/index'
 import { compileToFunctions } from './compiler/index'
 import { shouldDecodeNewlines, shouldDecodeNewlinesForHref } from './util/compat'
 
+/**
+ * idToTemplate 是一个带缓存的(id) => { return el.innerHTML }函数
+ * 功能：返回指定id选择器的DOM节点的内部HTML
+ */
 const idToTemplate = cached(id => {
   const el = query(id)
   return el && el.innerHTML
 })
 
-const mount = Vue.prototype.$mount
+const mount = Vue.prototype.$mount // 缓存原挂载方法
+/**
+ * 定义新挂载方法
+ * 新挂载方法中处理了无render函数的情况，将模板转化为render函数，再调用原挂载方法
+ * @param {string | Element} el DOM节点的选择器，或节点对象，Vue实例的挂载点
+ * @param {boolean} hydrating
+ */
 Vue.prototype.$mount = function (
   el?: string | Element,
   hydrating?: boolean
 ): Component {
-  el = el && query(el)
+  el = el && query(el) // 如果el为字符串，则获取该选择器对应的DOM节点
 
   /* istanbul ignore if */
-  if (el === document.body || el === document.documentElement) {
+  if (el === document.body || el === document.documentElement) { // Vue实例挂载点不能是<body>和<html>
     process.env.NODE_ENV !== 'production' && warn(
       `Do not mount Vue to <html> or <body> - mount to normal elements instead.`
     )
@@ -31,12 +45,13 @@ Vue.prototype.$mount = function (
 
   const options = this.$options
   // resolve template/el and convert to render function
+  // 解析模板，将其转化为render函数
   if (!options.render) {
     let template = options.template
     if (template) {
-      if (typeof template === 'string') {
+      if (typeof template === 'string') { // template是字符串
         if (template.charAt(0) === '#') {
-          template = idToTemplate(template)
+          template = idToTemplate(template) // 查询DOM中指定id的节点的innerHTML，即返回Vue实例锚点内的模板
           /* istanbul ignore if */
           if (process.env.NODE_ENV !== 'production' && !template) {
             warn(
@@ -45,7 +60,7 @@ Vue.prototype.$mount = function (
             )
           }
         }
-      } else if (template.nodeType) {
+      } else if (template.nodeType) { // template是DOM节点
         template = template.innerHTML
       } else {
         if (process.env.NODE_ENV !== 'production') {
@@ -53,10 +68,10 @@ Vue.prototype.$mount = function (
         }
         return this
       }
-    } else if (el) {
-      template = getOuterHTML(el)
+    } else if (el) { // 模板不存在，但el存在
+      template = getOuterHTML(el) // 获取el的HTML串
     }
-    if (template) {
+    if (template) { // 模板存在
       /* istanbul ignore if */
       if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
         mark('compile')
@@ -79,12 +94,16 @@ Vue.prototype.$mount = function (
       }
     }
   }
-  return mount.call(this, el, hydrating)
+  return mount.call(this, el, hydrating) // 调用原始挂载方法
 }
 
 /**
  * Get outerHTML of elements, taking care
  * of SVG elements in IE as well.
+ */
+/**
+ * 返回el的HTML串
+ * @param {Element} el DOM节点
  */
 function getOuterHTML (el: Element): string {
   if (el.outerHTML) {

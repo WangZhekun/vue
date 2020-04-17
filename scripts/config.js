@@ -25,7 +25,11 @@ const weexFactoryPlugin = {
   }
 }
 
-const aliases = require('./alias')
+const aliases = require('./alias') // 路径别名
+/**
+ * 将相对路径解析成绝对路径
+ * @param {string} p 相对路径
+ */
 const resolve = p => {
   const base = p.split('/')[0]
   if (aliases[base]) {
@@ -37,6 +41,7 @@ const resolve = p => {
 
 const builds = {
   // Runtime only (CommonJS). Used by bundlers e.g. Webpack & Browserify
+  // CommonJS格式的运行时模块。用于如webpack、Browserify等构建工具的bundler
   'web-runtime-cjs-dev': {
     entry: resolve('web/entry-runtime.js'),
     dest: resolve('dist/vue.runtime.common.dev.js'),
@@ -52,6 +57,7 @@ const builds = {
     banner
   },
   // Runtime+compiler CommonJS build (CommonJS)
+  // CommonJS格式的运行时+编译器模块
   'web-full-cjs-dev': {
     entry: resolve('web/entry-runtime-with-compiler.js'),
     dest: resolve('dist/vue.common.dev.js'),
@@ -69,6 +75,7 @@ const builds = {
     banner
   },
   // Runtime only ES modules build (for bundlers)
+  // ES Modules格式的运行时模块。用于支持ES Modules模块的构建工具的bundler，如Roolup、Webpack2
   'web-runtime-esm': {
     entry: resolve('web/entry-runtime.js'),
     dest: resolve('dist/vue.runtime.esm.js'),
@@ -76,6 +83,7 @@ const builds = {
     banner
   },
   // Runtime+compiler ES modules build (for bundlers)
+  // ES Modules格式的运行时+编译器模块
   'web-full-esm': {
     entry: resolve('web/entry-runtime-with-compiler.js'),
     dest: resolve('dist/vue.esm.js'),
@@ -104,6 +112,7 @@ const builds = {
     banner
   },
   // runtime-only build (Browser)
+  // 浏览器的运行时模块
   'web-runtime-dev': {
     entry: resolve('web/entry-runtime.js'),
     dest: resolve('dist/vue.runtime.js'),
@@ -112,6 +121,7 @@ const builds = {
     banner
   },
   // runtime-only production build (Browser)
+  // 浏览器的运行时生产模块
   'web-runtime-prod': {
     entry: resolve('web/entry-runtime.js'),
     dest: resolve('dist/vue.runtime.min.js'),
@@ -120,6 +130,7 @@ const builds = {
     banner
   },
   // Runtime+compiler development build (Browser)
+  // 浏览器的运行时+编译器开发模式的模块
   'web-full-dev': {
     entry: resolve('web/entry-runtime-with-compiler.js'),
     dest: resolve('dist/vue.js'),
@@ -129,6 +140,7 @@ const builds = {
     banner
   },
   // Runtime+compiler production build  (Browser)
+  // 浏览器的运行时+编译器生产模式的模块
   'web-full-prod': {
     entry: resolve('web/entry-runtime-with-compiler.js'),
     dest: resolve('dist/vue.min.js'),
@@ -138,6 +150,7 @@ const builds = {
     banner
   },
   // Web compiler (CommonJS).
+  // CommonJS格式的Web编译模块
   'web-compiler': {
     entry: resolve('web/entry-compiler.js'),
     dest: resolve('packages/vue-template-compiler/build.js'),
@@ -145,6 +158,7 @@ const builds = {
     external: Object.keys(require('../packages/vue-template-compiler/package.json').dependencies)
   },
   // Web compiler (UMD for in-browser use).
+  // UMD格式的Web编译模块
   'web-compiler-browser': {
     entry: resolve('web/entry-compiler.js'),
     dest: resolve('packages/vue-template-compiler/browser.js'),
@@ -154,6 +168,7 @@ const builds = {
     plugins: [node(), cjs()]
   },
   // Web server renderer (CommonJS).
+  // CommonJS格式的Web服务端渲染模块
   'web-server-renderer-dev': {
     entry: resolve('web/entry-server-renderer.js'),
     dest: resolve('packages/vue-server-renderer/build.dev.js'),
@@ -189,6 +204,7 @@ const builds = {
     external: Object.keys(require('../packages/vue-server-renderer/package.json').dependencies)
   },
   // Weex runtime factory
+  // Weex运行时工厂
   'weex-factory': {
     weex: true,
     entry: resolve('weex/entry-runtime-factory.js'),
@@ -197,6 +213,7 @@ const builds = {
     plugins: [weexFactoryPlugin]
   },
   // Weex runtime framework (CommonJS).
+  // CommonJS格式的Weex运行时框架
   'weex-framework': {
     weex: true,
     entry: resolve('weex/entry-framework.js'),
@@ -204,6 +221,7 @@ const builds = {
     format: 'cjs'
   },
   // Weex compiler (CommonJS). Used by Weex's Webpack loader.
+  // CommonJS格式的Weex编译器模块。用于Weex的Webpack loader
   'weex-compiler': {
     weex: true,
     entry: resolve('weex/entry-compiler.js'),
@@ -213,16 +231,20 @@ const builds = {
   }
 }
 
+/**
+ * 获取builds对象的属性名对应的构建配置对象
+ * @param {string} name builds对象的属性名
+ */
 function genConfig (name) {
-  const opts = builds[name]
-  const config = {
-    input: opts.entry,
-    external: opts.external,
-    plugins: [
+  const opts = builds[name] // 获取默认配置对象
+  const config = { // 创建新的配置对象
+    input: opts.entry, // 输入
+    external: opts.external, // 依赖
+    plugins: [ // 插件
       flow(),
       alias(Object.assign({}, aliases, opts.alias))
     ].concat(opts.plugins || []),
-    output: {
+    output: { // 输出
       file: opts.dest,
       format: opts.format,
       banner: opts.banner,
@@ -246,8 +268,8 @@ function genConfig (name) {
     vars[`process.env.${key}`] = featureFlags[key]
   })
   // build-specific env
-  if (opts.env) {
-    vars['process.env.NODE_ENV'] = JSON.stringify(opts.env)
+  if (opts.env) { // 如果默认配置对象存在env属性（环境变量）
+    vars['process.env.NODE_ENV'] = JSON.stringify(opts.env) // 添加Node环境变量插件
   }
   config.plugins.push(replace(vars))
 
@@ -255,17 +277,20 @@ function genConfig (name) {
     config.plugins.push(buble())
   }
 
-  Object.defineProperty(config, '_name', {
+  Object.defineProperty(config, '_name', { // 给配置对象添加不可枚举属性_name，值为入参name
     enumerable: false,
     value: name
   })
 
-  return config
+  return config // 返回新配置对象
 }
 
-if (process.env.TARGET) {
-  module.exports = genConfig(process.env.TARGET)
+if (process.env.TARGET) { // 如果当前脚本的执行命令的环境变量中有TARGET
+  module.exports = genConfig(process.env.TARGET) // 导出TARGET指定的属性名的配置对象
 } else {
-  exports.getBuild = genConfig
+  exports.getBuild = genConfig // 导出生成配置对象的方法
+  /**
+   * 以数组的方式，获取所有的构建目标的配置对象
+   */
   exports.getAllBuilds = () => Object.keys(builds).map(genConfig)
 }
