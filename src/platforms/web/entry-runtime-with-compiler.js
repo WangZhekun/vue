@@ -115,6 +115,6 @@ function getOuterHTML (el: Element): string {
   }
 }
 
-Vue.compile = compileToFunctions
+Vue.compile = compileToFunctions // 转换函数 —— 编译模板并将字符串状态的render和静态render函数转化为Function
 
 export default Vue
