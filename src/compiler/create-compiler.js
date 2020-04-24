@@ -5,16 +5,17 @@ import { detectErrors } from './error-detector'
 import { createCompileToFunctionFn } from './to-function'
 
 /**
- * createCompiler函的工厂函数
+ * createCompiler（编译函数及转换函数的工厂函数）的工厂函数
  * @param {Function} baseCompile
  */
 export function createCompilerCreator (baseCompile: Function): Function {
   /**
+   * 编译函数及转换函数的工厂函数
    * @param {Function} baseOptions 编译器配置对象，类型定义在flow/compiler.js中
    */
   return function createCompiler (baseOptions: CompilerOptions) {
     /**
-     *
+     * 编译函数 —— 整合配置项，调用baseCompile
      * @param {string} template 模板
      * @param {CompilerOptions} options 编译器配置对象，类型定义在flow/compiler.js中
      */
@@ -85,8 +86,8 @@ export function createCompilerCreator (baseCompile: Function): Function {
     }
 
     return {
-      compile,
-      compileToFunctions: createCompileToFunctionFn(compile)
+      compile, // 编译函数
+      compileToFunctions: createCompileToFunctionFn(compile) // 获得转换函数 —— 字符串状态的render和静态render函数转化为Function
     }
   }
 }

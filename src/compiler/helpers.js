@@ -167,6 +167,12 @@ export function getRawBindingAttr (
     el.rawAttrsMap[name]
 }
 
+/**
+ * 获取el的name属性的值
+ * @param {ASTElement} el AST节点，类型定义在flow/compiler.js中
+ * @param {string} name 属性名
+ * @param {boolean} getStatic 是否获取静态属性
+ */
 export function getBindingAttr (
   el: ASTElement,
   name: string,
@@ -174,11 +180,11 @@ export function getBindingAttr (
 ): ?string {
   const dynamicValue =
     getAndRemoveAttr(el, ':' + name) ||
-    getAndRemoveAttr(el, 'v-bind:' + name)
-  if (dynamicValue != null) {
-    return parseFilters(dynamicValue)
-  } else if (getStatic !== false) {
-    const staticValue = getAndRemoveAttr(el, name)
+    getAndRemoveAttr(el, 'v-bind:' + name) // 获取el的绑定属性的值，并将其从属性列表中移除
+  if (dynamicValue != null) { // name属性为被绑定的动态属性
+    return parseFilters(dynamicValue) // 处理表达式中的过滤器
+  } else if (getStatic !== false) { // name属性为静态属性
+    const staticValue = getAndRemoveAttr(el, name) // 获取el的name属性的值，并将其移除属性列表
     if (staticValue != null) {
       return JSON.stringify(staticValue)
     }
@@ -189,6 +195,12 @@ export function getBindingAttr (
 // doesn't get processed by processAttrs.
 // By default it does NOT remove it from the map (attrsMap) because the map is
 // needed during codegen.
+/**
+ * 获取el的name属性的值，并将其移除属性列表
+ * @param {ASTElement} el AST节点，类型定义在flow/compiler.js中
+ * @param {string} name 属性名
+ * @param {boolean} removeFromMap
+ */
 export function getAndRemoveAttr (
   el: ASTElement,
   name: string,

@@ -57,6 +57,12 @@ let platformMustUseProp // 函数：特性（attribute）是否需要被绑定�
 let platformGetTagNamespace // 函数：检查标签的命名空间
 let maybeComponent
 
+/**
+ * 创建HTML节点对应的ASTElement
+ * @param {string} tag HTML标签名称
+ * @param {Array<Object>} attrs HTML属性列表
+ * @param {ASTElement} parent 父节点
+ */
 export function createASTElement (
   tag: string,
   attrs: Array<ASTAttr>,
@@ -77,7 +83,7 @@ export function createASTElement (
  * Convert HTML string to AST.
  */
 /**
- *
+ * 解析模板，生成ASTElement树
  * @param {string} template 模板
  * @param {CompilerOptions} options 编译器配置对象，类型定义在flow/compiler.js中
  */
@@ -97,15 +103,15 @@ export function parse (
   preTransforms = pluckModuleFunction(options.modules, 'preTransformNode') // 返回平台特殊模块配置中，属性名为preTransformNode的非空值
   postTransforms = pluckModuleFunction(options.modules, 'postTransformNode') // 返回平台特殊模块配置中，属性名为postTransformNode的非空值
 
-  delimiters = options.delimiters
+  delimiters = options.delimiters // 模板分隔符
 
   const stack = []
-  const preserveWhitespace = options.preserveWhitespace !== false
-  const whitespaceOption = options.whitespace
+  const preserveWhitespace = options.preserveWhitespace !== false // 是否保留节点之间的空白
+  const whitespaceOption = options.whitespace // 空白处理策略
   let root
   let currentParent
-  let inVPre = false
-  let inPre = false
+  let inVPre = false // 节点是否包含v-pre指令，v-pre指令：跳过这个元素和它的子元素的编译过程
+  let inPre = false // 非（标签是否需要保留空白）
   let warned = false
 
   function warnOnce (msg, range) {
@@ -115,19 +121,23 @@ export function parse (
     }
   }
 
+  /**
+   * 处理AST节点的条件指令和插槽指令，及其他预处理等状态
+   * @param {ASTElement} element AST节点，类型定义在flow/compiler.js中
+   */
   function closeElement (element) {
-    trimEndingWhitespace(element)
-    if (!inVPre && !element.processed) {
-      element = processElement(element, options)
+    trimEndingWhitespace(element) // 如果inPre为false，移除element子节点中的空格文本
+    if (!inVPre && !element.processed) { // TODO processed属性和inVPre是什么意思？？？
+      element = processElement(element, options) // 处理element的各种属性
     }
     // tree management
-    if (!stack.length && element !== root) {
+    if (!stack.length && element !== root) { // element是根节点的兄弟节点 TODO：这种情况是怎么写出来的
       // allow root elements with v-if, v-else-if and v-else
-      if (root.if && (element.elseif || element.else)) {
+      if (root.if && (element.elseif || element.else)) { // 根节点有v-if，element有else-if或else
         if (process.env.NODE_ENV !== 'production') {
-          checkRootConstraints(element)
+          checkRootConstraints(element) // 检查根节点约束条件
         }
-        addIfCondition(root, {
+        addIfCondition(root, { // 将由element组成的condition加入到root的ifConditions中
           exp: element.elseif,
           block: element
         })
@@ -141,10 +151,10 @@ export function parse (
       }
     }
     if (currentParent && !element.forbidden) {
-      if (element.elseif || element.else) {
-        processIfConditions(element, currentParent)
+      if (element.elseif || element.else) { // 节点上有ele-if或else
+        processIfConditions(element, currentParent) // 处理element的else-if和else的条件
       } else {
-        if (element.slotScope) {
+        if (element.slotScope) { // 节点上有slot-scope
           // scoped slot
           // keep it in the children list so that v-else(-if) conditions can
           // find it as the prev node.
@@ -158,8 +168,9 @@ export function parse (
 
     // final children cleanup
     // filter out scoped slots
-    element.children = element.children.filter(c => !(c: any).slotScope)
+    element.children = element.children.filter(c => !(c: any).slotScope) // 处理element的子节点，过滤掉插槽
     // remove trailing whitespace node again
+    // 如果inPre为false，移除element子节点中的空格文本
     trimEndingWhitespace(element)
 
     // check pre state
@@ -175,6 +186,10 @@ export function parse (
     }
   }
 
+  /**
+   * 如果inPre为false，移除子节点中的空格文本
+   * @param {ASTElement} el AST节点，类型定义在flow/compiler.js中
+   */
   function trimEndingWhitespace (el) {
     // remove trailing whitespace node
     if (!inPre) {
@@ -183,12 +198,16 @@ export function parse (
         (lastNode = el.children[el.children.length - 1]) &&
         lastNode.type === 3 &&
         lastNode.text === ' '
-      ) {
+      ) { // 最后一个子节点为空格
         el.children.pop()
       }
     }
   }
 
+  /**
+   * 检查根节点约束条件：不能是slot、template节点，不能包含v-for指令
+   * @param {ASTElement} el AST节点，类型定义在flow/compiler.js中
+   */
   function checkRootConstraints (el) {
     if (el.tag === 'slot' || el.tag === 'template') {
       warnOnce(
@@ -206,6 +225,7 @@ export function parse (
     }
   }
 
+  // 处理模板
   parseHTML(template, {
     warn,
     expectHTML: options.expectHTML,
@@ -215,6 +235,14 @@ export function parse (
     shouldDecodeNewlinesForHref: options.shouldDecodeNewlinesForHref,
     shouldKeepComment: options.comments,
     outputSourceRange: options.outputSourceRange,
+    /**
+     * 处理起始HTML节点
+     * @param {string} tag HTML标签名称
+     * @param {Array<Object>} attrs 属性列表
+     * @param {boolean} unary 标签在平台上是否是一元的
+     * @param {number} start 标签起始索引
+     * @param {number} end 标签结束索引
+     */
     start (tag, attrs, unary, start, end) {
       // check namespace.
       // inherit parent ns if there is one
@@ -226,7 +254,7 @@ export function parse (
         attrs = guardIESVGBug(attrs)
       }
 
-      let element: ASTElement = createASTElement(tag, attrs, currentParent)
+      let element: ASTElement = createASTElement(tag, attrs, currentParent) // 创建tag对应的ASTElement对象
       if (ns) {
         element.ns = ns
       }
@@ -254,7 +282,7 @@ export function parse (
         })
       }
 
-      if (isForbiddenTag(element) && !isServerRendering()) {
+      if (isForbiddenTag(element) && !isServerRendering()) { // 非法节点，且非服务端渲染
         element.forbidden = true
         process.env.NODE_ENV !== 'production' && warn(
           'Templates should only be responsible for mapping the state to the ' +
@@ -265,12 +293,13 @@ export function parse (
       }
 
       // apply pre-transforms
+      // 平台特殊模块配置中的preTransformNode
       for (let i = 0; i < preTransforms.length; i++) {
         element = preTransforms[i](element, options) || element
       }
 
       if (!inVPre) {
-        processPre(element)
+        processPre(element) // 处理element的v-pre属性
         if (element.pre) {
           inVPre = true
         }
@@ -278,12 +307,13 @@ export function parse (
       if (platformIsPreTag(element.tag)) {
         inPre = true
       }
-      if (inVPre) {
-        processRawAttrs(element)
+      if (inVPre) { // 跳过这个元素和它的子元素的编译过程
+        processRawAttrs(element) // 保存未处理的属性
       } else if (!element.processed) {
         // structural directives
+        // 解析指令
         processFor(element)
-        processIf(element)
+        processIf(element) // 处理element上的v-if、v-else-if、v-else指令
         processOnce(element)
       }
 
@@ -294,16 +324,22 @@ export function parse (
         }
       }
 
-      if (!unary) {
+      if (!unary) { // 非一元节点
         currentParent = element
-        stack.push(element)
+        stack.push(element) // 入栈
       } else {
         closeElement(element)
       }
     },
 
+    /**
+     * 处理结束HTML节点
+     * @param {string} tag HTML标签名称
+     * @param {number} start 标签起始索引
+     * @param {number} end 标签结束索引
+     */
     end (tag, start, end) {
-      const element = stack[stack.length - 1]
+      const element = stack[stack.length - 1] // 出栈
       // pop stack
       stack.length -= 1
       currentParent = stack[stack.length - 1]
@@ -313,6 +349,12 @@ export function parse (
       closeElement(element)
     },
 
+    /**
+     * 处理文本节点
+     * @param {string} text 文本内容
+     * @param {number} start 文本起始索引
+     * @param {number} end 文本终点索引
+     */
     chars (text: string, start: number, end: number) {
       if (!currentParent) {
         if (process.env.NODE_ENV !== 'production') {
@@ -384,6 +426,12 @@ export function parse (
         }
       }
     },
+    /**
+     * 处理注释节点
+     * @param {string} text 注释内容
+     * @param {number} start 标签起始索引
+     * @param {number} end 标签结束索引
+     */
     comment (text: string, start, end) {
       // adding anyting as a sibling to the root node is forbidden
       // comments should still be allowed, but ignored
@@ -410,6 +458,10 @@ function processPre (el) {
   }
 }
 
+/**
+ * 处理未加工的属性
+ * @param {ASLElement} el ASLElement对象
+ */
 function processRawAttrs (el) {
   const list = el.attrsList
   const len = list.length
@@ -431,33 +483,43 @@ function processRawAttrs (el) {
   }
 }
 
+/**
+ * 处理ASTElement的各种属性，包括<slot>
+ * @param {ASTElement} element AST节点，类型定义在flow/compiler.js中
+ * @param {CompilerOptions} options 编译器配置对象，类型定义在flow/compiler.js中
+ */
 export function processElement (
   element: ASTElement,
   options: CompilerOptions
 ) {
-  processKey(element)
+  processKey(element) // 处理key属性
 
   // determine whether this is a plain element after
   // removing structural attributes
+  // 简单元素标记
   element.plain = (
     !element.key &&
     !element.scopedSlots &&
     !element.attrsList.length
   )
 
-  processRef(element)
-  processSlotContent(element)
-  processSlotOutlet(element)
-  processComponent(element)
-  for (let i = 0; i < transforms.length; i++) {
+  processRef(element) // 处理ref属性
+  processSlotContent(element) // 处理slot，或slot-scope属性
+  processSlotOutlet(element) // 处理<slot>
+  processComponent(element) // 处理is属性，inline-template属性，即element是一个组件
+  for (let i = 0; i < transforms.length; i++) { // 平台特殊模块中的transformNode处理
     element = transforms[i](element, options) || element
   }
-  processAttrs(element)
+  processAttrs(element) // 处理其他属性
   return element
 }
 
+/**
+ * 处理el的key属性
+ * @param {ASTElement} el AST节点，类型定义在flow/compiler.js中
+ */
 function processKey (el) {
-  const exp = getBindingAttr(el, 'key')
+  const exp = getBindingAttr(el, 'key') // 获取el的key属性的值（表达式）
   if (exp) {
     if (process.env.NODE_ENV !== 'production') {
       if (el.tag === 'template') {
@@ -483,20 +545,28 @@ function processKey (el) {
   }
 }
 
+/**
+ * 处理el的ref属性
+ * @param {ASTElement} el AST节点，类型定义在flow/compiler.js中
+ */
 function processRef (el) {
   const ref = getBindingAttr(el, 'ref')
   if (ref) {
     el.ref = ref
-    el.refInFor = checkInFor(el)
+    el.refInFor = checkInFor(el) // ref被包含在for中
   }
 }
 
+/**
+ * 处理el的v-for属性
+ * @param {ASTElement} el AST节点，类型定义在flow/compiler.js中
+ */
 export function processFor (el: ASTElement) {
   let exp
   if ((exp = getAndRemoveAttr(el, 'v-for'))) {
-    const res = parseFor(exp)
+    const res = parseFor(exp) // 处理v-for的表达式
     if (res) {
-      extend(el, res)
+      extend(el, res) // 合并处理结果到el中
     } else if (process.env.NODE_ENV !== 'production') {
       warn(
         `Invalid v-for expression: ${exp}`,
@@ -507,23 +577,27 @@ export function processFor (el: ASTElement) {
 }
 
 type ForParseResult = {
-  for: string;
-  alias: string;
-  iterator1?: string;
-  iterator2?: string;
+  for: string; // v-for指令的表达式
+  alias: string; // in/of前的表达式
+  iterator1?: string; // 遍历器
+  iterator2?: string; // 索引
 };
 
+/**
+ * 解析v-for的表达式
+ * @param {string} exp v-for的表达式
+ */
 export function parseFor (exp: string): ?ForParseResult {
-  const inMatch = exp.match(forAliasRE)
+  const inMatch = exp.match(forAliasRE) // 正则匹配表达式
   if (!inMatch) return
   const res = {}
-  res.for = inMatch[2].trim()
-  const alias = inMatch[1].trim().replace(stripParensRE, '')
+  res.for = inMatch[2].trim() // in/of后的部分
+  const alias = inMatch[1].trim().replace(stripParensRE, '') // in/of前，将()去除
   const iteratorMatch = alias.match(forIteratorRE)
   if (iteratorMatch) {
     res.alias = alias.replace(forIteratorRE, '').trim()
-    res.iterator1 = iteratorMatch[1].trim()
-    if (iteratorMatch[2]) {
+    res.iterator1 = iteratorMatch[1].trim() // 遍历器
+    if (iteratorMatch[2]) { // 索引
       res.iterator2 = iteratorMatch[2].trim()
     }
   } else {
@@ -532,6 +606,10 @@ export function parseFor (exp: string): ?ForParseResult {
   return res
 }
 
+/**
+ * 处理el上的v-if、v-else-if、v-else指令
+ * @param {ASTElement} el ASTElement节点
+ */
 function processIf (el) {
   const exp = getAndRemoveAttr(el, 'v-if')
   if (exp) {
@@ -540,7 +618,7 @@ function processIf (el) {
       exp: exp,
       block: el
     })
-  } else {
+  } else { // v-if后的表达式
     if (getAndRemoveAttr(el, 'v-else') != null) {
       el.else = true
     }
@@ -551,10 +629,15 @@ function processIf (el) {
   }
 }
 
+/**
+ * 处理el的v-else-if和v-else的条件
+ * @param {ASTElement} el ASTElement节点
+ * @param {ASTElement} parent ASTElement节点，el的父节点
+ */
 function processIfConditions (el, parent) {
-  const prev = findPrevElement(parent.children)
-  if (prev && prev.if) {
-    addIfCondition(prev, {
+  const prev = findPrevElement(parent.children) // 查找parent的子节点中最后一个ASTElement节点，将该节点之后的所有节点弹出数组
+  if (prev && prev.if) { // 如果该节点存在，且有v-if
+    addIfCondition(prev, { // 将由el组成的condition添加到prev的ifConditions中，即处理el的else-if的情况
       exp: el.elseif,
       block: el
     })
@@ -567,6 +650,10 @@ function processIfConditions (el, parent) {
   }
 }
 
+/**
+ * 查找最后一个ASTElement节点，将该节点之后的所有节点弹出数组
+ * @param {Array<any>} children 子节点列表
+ */
 function findPrevElement (children: Array<any>): ASTElement | void {
   let i = children.length
   while (i--) {
@@ -585,6 +672,11 @@ function findPrevElement (children: Array<any>): ASTElement | void {
   }
 }
 
+/**
+ * 将condition添加到el的ifConditions中
+ * @param {ASTElement} el ASTElement节点
+ * @param {ASTIfCondition} condition If条件
+ */
 export function addIfCondition (el: ASTElement, condition: ASTIfCondition) {
   if (!el.ifConditions) {
     el.ifConditions = []
@@ -936,6 +1028,10 @@ function isTextTag (el): boolean {
   return el.tag === 'script' || el.tag === 'style'
 }
 
+/**
+ * 是否是非法节点，style节点，或，没有type或type为text/javascript的script节点
+ * @param {ASLElement} el ASLElement对象
+ */
 function isForbiddenTag (el): boolean {
   return (
     el.tag === 'style' ||

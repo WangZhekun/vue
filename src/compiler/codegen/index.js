@@ -1,7 +1,7 @@
 /* @flow */
 
 import { genHandlers } from './events'
-import baseDirectives from '../directives/index'
+import baseDirectives from '../directives/index' // 基础指令
 import { camelize, no, extend } from 'shared/util'
 import { baseWarn, pluckModuleFunction } from '../helpers'
 import { emptySlotScopeToken } from '../parser/index'
@@ -10,13 +10,13 @@ type TransformFunction = (el: ASTElement, code: string) => string;
 type DataGenFunction = (el: ASTElement) => string;
 type DirectiveFunction = (el: ASTElement, dir: ASTDirective, warn: Function) => boolean;
 
-export class CodegenState {
-  options: CompilerOptions;
-  warn: Function;
-  transforms: Array<TransformFunction>;
-  dataGenFns: Array<DataGenFunction>;
-  directives: { [key: string]: DirectiveFunction };
-  maybeComponent: (el: ASTElement) => boolean;
+export class CodegenState { // render函数生成状态
+  options: CompilerOptions; // 编译配置项
+  warn: Function; // 警告函数
+  transforms: Array<TransformFunction>; // 返回平台特殊模块配置中，属性名为transformCode的非空值
+  dataGenFns: Array<DataGenFunction>; // 返回平台特殊模块配置中，属性名为genData的非空值
+  directives: { [key: string]: DirectiveFunction }; // 合并基础指令和平台的特殊指令
+  maybeComponent: (el: ASTElement) => boolean; // el是否为组件
   onceId: number;
   staticRenderFns: Array<string>;
   pre: boolean;
@@ -27,7 +27,7 @@ export class CodegenState {
     this.transforms = pluckModuleFunction(options.modules, 'transformCode')
     this.dataGenFns = pluckModuleFunction(options.modules, 'genData')
     this.directives = extend(extend({}, baseDirectives), options.directives)
-    const isReservedTag = options.isReservedTag || no
+    const isReservedTag = options.isReservedTag || no // 标签在平台上是否是原生的
     this.maybeComponent = (el: ASTElement) => !!el.component || !isReservedTag(el.tag)
     this.onceId = 0
     this.staticRenderFns = []
@@ -40,11 +40,16 @@ export type CodegenResult = {
   staticRenderFns: Array<string>
 };
 
+/**
+ * 生成ast对应的render和静态render函数
+ * @param {ASTElement} ast ASTElement节点
+ * @param {CompilerOptions} options 编译配置项
+ */
 export function generate (
   ast: ASTElement | void,
   options: CompilerOptions
 ): CodegenResult {
-  const state = new CodegenState(options)
+  const state = new CodegenState(options) // 创建CodegenState对象
   const code = ast ? genElement(ast, state) : '_c("div")'
   return {
     render: `with(this){return ${code}}`,
@@ -52,18 +57,23 @@ export function generate (
   }
 }
 
+/**
+ * 生成ASTElement节点
+ * @param {ASTElement} el ASTElement节点
+ * @param {CodegenState} state render函数生成状态
+ */
 export function genElement (el: ASTElement, state: CodegenState): string {
   if (el.parent) {
     el.pre = el.pre || el.parent.pre
   }
 
-  if (el.staticRoot && !el.staticProcessed) {
+  if (el.staticRoot && !el.staticProcessed) { // 静态根节点，且没处理过
     return genStatic(el, state)
-  } else if (el.once && !el.onceProcessed) {
+  } else if (el.once && !el.onceProcessed) { // v-once，且没处理过
     return genOnce(el, state)
-  } else if (el.for && !el.forProcessed) {
+  } else if (el.for && !el.forProcessed) { // v-for，且没处理过
     return genFor(el, state)
-  } else if (el.if && !el.ifProcessed) {
+  } else if (el.if && !el.ifProcessed) { // v-if，且没处理过
     return genIf(el, state)
   } else if (el.tag === 'template' && !el.slotTarget && !state.pre) {
     return genChildren(el, state) || 'void 0'
@@ -96,6 +106,11 @@ export function genElement (el: ASTElement, state: CodegenState): string {
 }
 
 // hoist static sub-trees out
+/**
+ * 生成静态节点，格式：'_m(1,true)'
+ * @param {ASTElement} el ASTElement节点
+ * @param {CodegenState} state render函数生成状态
+ */
 function genStatic (el: ASTElement, state: CodegenState): string {
   el.staticProcessed = true
   // Some elements (templates) need to behave differently inside of a v-pre
@@ -115,9 +130,14 @@ function genStatic (el: ASTElement, state: CodegenState): string {
 }
 
 // v-once
+/**
+ * 生成v-once节点，格式：'_o(...)'或同genStatic或同genIf
+ * @param {ASTElement} el ASTElement节点
+ * @param {CodegenState} state render函数生成状态
+ */
 function genOnce (el: ASTElement, state: CodegenState): string {
   el.onceProcessed = true
-  if (el.if && !el.ifProcessed) {
+  if (el.if && !el.ifProcessed) { // 如果有v-if，且没处理，则先处理if
     return genIf(el, state)
   } else if (el.staticInFor) {
     let key = ''
@@ -142,16 +162,30 @@ function genOnce (el: ASTElement, state: CodegenState): string {
   }
 }
 
+/**
+ * 处理v-if，生成嵌套的三元表达式
+ * @param {ASTElement} el ASTElement节点
+ * @param {CodegenState} state render函数生成状态
+ * @param {Function} altGen
+ * @param {string} altEmpty
+ */
 export function genIf (
   el: any,
   state: CodegenState,
   altGen?: Function,
   altEmpty?: string
 ): string {
-  el.ifProcessed = true // avoid recursion
-  return genIfConditions(el.ifConditions.slice(), state, altGen, altEmpty)
+  el.ifProcessed = true // avoid recursion 避免递归
+  return genIfConditions(el.ifConditions.slice(), state, altGen, altEmpty) // 复制el.ifConditions，并按照条件生成三元表达式
 }
 
+/**
+ * 按照v-if的条件生成嵌套的三元表达式
+ * @param {ASTIfConditions} conditions 条件列表
+ * @param {CodegenState} state  render函数生成状态
+ * @param {Function} altGen 三元表达式的生成第二元的函数
+ * @param {string} altEmpty conditions为空时的返回值，默认为'_e()'
+ */
 function genIfConditions (
   conditions: ASTIfConditions,
   state: CodegenState,
@@ -167,13 +201,20 @@ function genIfConditions (
     return `(${condition.exp})?${
       genTernaryExp(condition.block)
     }:${
-      genIfConditions(conditions, state, altGen, altEmpty)
+      genIfConditions(conditions, state, altGen, altEmpty) // 递归调用genIfConditions，处理所有if条件
     }`
   } else {
     return `${genTernaryExp(condition.block)}`
   }
 
   // v-if with v-once should generate code like (a)?_m(0):_m(1)
+  /**
+   * 生成三元表达式
+   * 如果存在altGen，则返回altGen()的返回值
+   * 如果v-once，则返回genOnce()的返回值
+   * 否则，返回genElement()的返回值
+   * @param {ASTElement} el ASTElement节点
+   */
   function genTernaryExp (el) {
     return altGen
       ? altGen(el, state)
@@ -183,6 +224,13 @@ function genIfConditions (
   }
 }
 
+/**
+ * 处理v-for，生成'_l((item in arr), function(item, item, index){ return ...})'
+ * @param {ASTElement} el ASTElement节点
+ * @param {CodegenState} state render函数生成状态
+ * @param {Function} altGen 返回结果中'return'后的结果的执行函数
+ * @param {string} altHelper 返回结果中'_l'字符串的替代字符串
+ */
 export function genFor (
   el: any,
   state: CodegenState,
@@ -216,12 +264,17 @@ export function genFor (
     '})'
 }
 
+/**
+ * 生成ASTElement的属性集合的字符串，格式：_b({directives: ..., key:..., ...})
+ * @param {ASTElement} el ASTElement节点
+ * @param {CodegenState} state render函数生成状态
+ */
 export function genData (el: ASTElement, state: CodegenState): string {
   let data = '{'
 
   // directives first.
   // directives may mutate the el's other properties before they are generated.
-  const dirs = genDirectives(el, state)
+  const dirs = genDirectives(el, state) // 处理指令，生成'directives:[{name:"...", ...}...]'
   if (dirs) data += dirs + ','
 
   // key
@@ -306,6 +359,11 @@ export function genData (el: ASTElement, state: CodegenState): string {
   return data
 }
 
+/**
+ * 处理指令，生成'directives:[{name:"...", ...}...]'
+ * @param {ASTElement} el ASTElement节点
+ * @param {CodegenState} state render函数生成状态
+ */
 function genDirectives (el: ASTElement, state: CodegenState): string | void {
   const dirs = el.directives
   if (!dirs) return
@@ -337,6 +395,11 @@ function genDirectives (el: ASTElement, state: CodegenState): string | void {
   }
 }
 
+/**
+ * 处理inline模板，格式：'inlineTemplate:{render:function(){generate函数的结果的render属性},staticRenderFns:[generate函数的结果的staticRenderFns属性转字符串]}'
+ * @param {ASTElement} el ASTElement节点，有一个ASTElement子节点
+ * @param {CodegenState} state render函数生成状态
+ */
 function genInlineTemplate (el: ASTElement, state: CodegenState): ?string {
   const ast = el.children[0]
   if (process.env.NODE_ENV !== 'production' && (
@@ -357,6 +420,12 @@ function genInlineTemplate (el: ASTElement, state: CodegenState): ?string {
   }
 }
 
+/**
+ * 生成多个插槽，格式：'scopedSlots:_u([单个插槽],null,true,hash值)'
+ * @param {ASTElement} el ASTElement节点
+ * @param {Object} slots 插槽Map
+ * @param {CodegenState} state render函数生成状态
+ */
 function genScopedSlots (
   el: ASTElement,
   slots: { [key: string]: ASTElement },
@@ -366,7 +435,7 @@ function genScopedSlots (
   // components with only scoped slots to skip forced updates from parent.
   // but in some cases we have to bail-out of this optimization
   // for example if the slot contains dynamic names, has v-if or v-for on them...
-  let needsForceUpdate = el.for || Object.keys(slots).some(key => {
+  let needsForceUpdate = el.for || Object.keys(slots).some(key => { // 强制更新标志：el有v-for，或插槽节点有v-if、v-for、动态插槽名，包含为插槽的子节点
     const slot = slots[key]
     return (
       slot.slotTargetDynamic ||
@@ -380,14 +449,14 @@ function genScopedSlots (
   // it's possible for the same component to be reused but with different
   // compiled slot content. To avoid that, we generate a unique key based on
   // the generated code of all the slot contents.
-  let needsKey = !!el.if
+  let needsKey = !!el.if // 需要key属性
 
   // OR when it is inside another scoped slot or v-for (the reactivity may be
   // disconnected due to the intermediate scope variable)
   // #9438, #9506
   // TODO: this can be further optimized by properly analyzing in-scope bindings
   // and skip force updating ones that do not actually use scope variables.
-  if (!needsForceUpdate) {
+  if (!needsForceUpdate) { // 遍历el的祖先节点，更新强制更新标志和需要key属性标志
     let parent = el.parent
     while (parent) {
       if (
@@ -424,6 +493,10 @@ function hash(str) {
   return hash >>> 0
 }
 
+/**
+ * el树包含<slot>节点
+ * @param {ASTNode} el ASTNode节点
+ */
 function containsSlotChild (el: ASTNode): boolean {
   if (el.type === 1) {
     if (el.tag === 'slot') {
@@ -434,6 +507,11 @@ function containsSlotChild (el: ASTNode): boolean {
   return false
 }
 
+/**
+ * 处理插槽，格式：'{key:插槽名,fn:function(插槽名){return 节点生成结果},proxy:true}'
+ * @param {ASTElement} el ASTElement节点
+ * @param {CodegenState} state render函数生成状态
+ */
 function genScopedSlot (
   el: ASTElement,
   state: CodegenState
@@ -460,6 +538,14 @@ function genScopedSlot (
   return `{key:${el.slotTarget || `"default"`},fn:${fn}${reverseProxy}}`
 }
 
+/**
+ * 处理子节点，格式：'处理节点的结果,1|0' 或 '[节点处理结果,节点处理结果...],需要标准化的程度'
+ * @param {ASTElement} el ASTElement节点
+ * @param {CodegenState} state render函数生成状态
+ * @param {boolean} checkSkip 是否检查是否需要标准化
+ * @param {Function} altGenElement genElement的替代函数
+ * @param {Function} altGenNode genNode的替代函数
+ */
 export function genChildren (
   el: ASTElement,
   state: CodegenState,
@@ -495,6 +581,11 @@ export function genChildren (
 // 0: no normalization needed
 // 1: simple normalization needed (possible 1-level deep nested array)
 // 2: full normalization needed
+/**
+ * 确定子节点是否需要标准化，0 —— 不需要标准化，1 —— 需要简单标准化，2 —— 需要深入标准化
+ * @param {Array<ASTNode>} children 子字节列表
+ * @param {Function} maybeComponent 函数-是否是组件
+ */
 function getNormalizationType (
   children: Array<ASTNode>,
   maybeComponent: (el: ASTElement) => boolean
@@ -506,22 +597,31 @@ function getNormalizationType (
       continue
     }
     if (needsNormalization(el) ||
-        (el.ifConditions && el.ifConditions.some(c => needsNormalization(c.block)))) {
+        (el.ifConditions && el.ifConditions.some(c => needsNormalization(c.block)))) { // 当前节点需要标准化，或有条件渲染，v-if的节点需要标准化
       res = 2
       break
     }
     if (maybeComponent(el) ||
-        (el.ifConditions && el.ifConditions.some(c => maybeComponent(c.block)))) {
+        (el.ifConditions && el.ifConditions.some(c => maybeComponent(c.block)))) { // 当前节点是组件，或有条件渲染，v-if的节点为组件
       res = 1
     }
   }
   return res
 }
 
+/**
+ * 节点有v-for或为<template>或<slot>，需要做标准化
+ * @param {ASTElement} el ASTElement节点
+ */
 function needsNormalization (el: ASTElement): boolean {
   return el.for !== undefined || el.tag === 'template' || el.tag === 'slot'
 }
 
+/**
+ * 生成AST元素、注释、文本
+ * @param {ASTNode} node AST元素、注释、文本
+ * @param {CodegenState} state render函数生成状态
+ */
 function genNode (node: ASTNode, state: CodegenState): string {
   if (node.type === 1) {
     return genElement(node, state)
@@ -532,6 +632,10 @@ function genNode (node: ASTNode, state: CodegenState): string {
   }
 }
 
+/**
+ * 生成文本节点，格式：'_v(文本/文本表达式)'
+ * @param {ASTText | ASTExpression} text ASTText或ASTExpression节点
+ */
 export function genText (text: ASTText | ASTExpression): string {
   return `_v(${text.type === 2
     ? text.expression // no need for () because already wrapped in _s()
@@ -539,12 +643,21 @@ export function genText (text: ASTText | ASTExpression): string {
   })`
 }
 
+/**
+ * 生成注释，格式：'_e(注释文本)'
+ * @param {ASTText} comment ASTText节点
+ */
 export function genComment (comment: ASTText): string {
   return `_e(${JSON.stringify(comment.text)})`
 }
 
+/**
+ * 生成插槽节点，格式：'_t(插槽名, 子组件, 属性, 动态绑定表达式)'
+ * @param {ASTElement} el ASTElement节点
+ * @param {CodegenState} state render函数生成状态
+ */
 function genSlot (el: ASTElement, state: CodegenState): string {
-  const slotName = el.slotName || '"default"'
+  const slotName = el.slotName || '"default"' // 插槽名
   const children = genChildren(el, state)
   let res = `_t(${slotName}${children ? `,${children}` : ''}`
   const attrs = el.attrs || el.dynamicAttrs
@@ -569,6 +682,12 @@ function genSlot (el: ASTElement, state: CodegenState): string {
 }
 
 // componentName is el.component, take it as argument to shun flow's pessimistic refinement
+/**
+ * 生成指令，格式：'_c(组件名,_b({...}), 子组件)'
+ * @param {string} componentName 组件名
+ * @param {ASTElement} el ASTElement节点
+ * @param {CodegenState} state render函数生成状态
+ */
 function genComponent (
   componentName: string,
   el: ASTElement,
@@ -580,6 +699,10 @@ function genComponent (
   })`
 }
 
+/**
+ * 生成静态属性或动态属性的字符串，静态属性：'{属性名:属性值}'，动态属性：'_d(静态属性, [属性名,属性值,属性名,属性值...])'
+ * @param {Array<ASTAttr>} props AST属性列表
+ */
 function genProps (props: Array<ASTAttr>): string {
   let staticProps = ``
   let dynamicProps = ``

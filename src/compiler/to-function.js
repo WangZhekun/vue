@@ -18,9 +18,19 @@ function createFunction (code, errors) {
   }
 }
 
+/**
+ * render和静态render转换函数的工厂
+ * @param {Function} compile 编译函数
+ */
 export function createCompileToFunctionFn (compile: Function): Function {
   const cache = Object.create(null)
 
+  /**
+   * 调用编译函数编译template，将生成的字符串状态的render和静态render函数，转化为Function
+   * @param {string} template 模板
+   * @param {CompilerOptions} options 编译配置
+   * @param {Component} vm vue实例
+   */
   return function compileToFunctions (
     template: string,
     options?: CompilerOptions,
@@ -49,15 +59,15 @@ export function createCompileToFunctionFn (compile: Function): Function {
     }
 
     // check cache
-    const key = options.delimiters
+    const key = options.delimiters // 模板分隔符
       ? String(options.delimiters) + template
       : template
-    if (cache[key]) {
+    if (cache[key]) { // 如果有缓存，则取缓存
       return cache[key]
     }
 
     // compile
-    const compiled = compile(template, options)
+    const compiled = compile(template, options) // 调用编译函数，生成render和静态render函数
 
     // check compilation errors/tips
     if (process.env.NODE_ENV !== 'production') {
@@ -90,8 +100,8 @@ export function createCompileToFunctionFn (compile: Function): Function {
     // turn code into functions
     const res = {}
     const fnGenErrors = []
-    res.render = createFunction(compiled.render, fnGenErrors)
-    res.staticRenderFns = compiled.staticRenderFns.map(code => {
+    res.render = createFunction(compiled.render, fnGenErrors) // 将字符串状态的render函数转化为Function
+    res.staticRenderFns = compiled.staticRenderFns.map(code => { // 将字符串状态的静态render函数转化为Function
       return createFunction(code, fnGenErrors)
     })
 

@@ -78,14 +78,14 @@ Vue.prototype.$mount = function (
       }
 
       const { render, staticRenderFns } = compileToFunctions(template, {
-        outputSourceRange: process.env.NODE_ENV !== 'production',
-        shouldDecodeNewlines,
-        shouldDecodeNewlinesForHref,
-        delimiters: options.delimiters,
-        comments: options.comments
-      }, this)
-      options.render = render
-      options.staticRenderFns = staticRenderFns
+        outputSourceRange: process.env.NODE_ENV !== 'production', // 非生产环境标志
+        shouldDecodeNewlines, // 在浏览器中，需要解码
+        shouldDecodeNewlinesForHref, // 在浏览器中，href属性值需要解码
+        delimiters: options.delimiters, // 改变纯文本插入分隔符
+        comments: options.comments // 是否保留模板中的注释
+      }, this) // 编译模板，生成ast树，生成render和静态render函数
+      options.render = render // render函数
+      options.staticRenderFns = staticRenderFns // 静态render函数
 
       /* istanbul ignore if */
       if (process.env.NODE_ENV !== 'production' && config.performance && mark) {

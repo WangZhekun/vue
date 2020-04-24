@@ -27,6 +27,7 @@ const comment = /^<!\--/
 const conditionalComment = /^<!\[/
 
 // Special Elements (can contain anything)
+// 检测函数，检测传入的字符串是否为script、style、textarea，不区分大小写
 export const isPlainTextElement = makeMap('script,style,textarea', true)
 const reCache = {}
 
@@ -51,21 +52,27 @@ function decodeAttr (value, shouldDecodeNewlines) {
   return value.replace(re, match => decodingMap[match])
 }
 
+/**
+ * 处理HTML节点
+ * @param {string} html 模板
+ * @param {Object} options 配置项
+ */
 export function parseHTML (html, options) {
   const stack = []
-  const expectHTML = options.expectHTML
-  const isUnaryTag = options.isUnaryTag || no
+  const expectHTML = options.expectHTML // 仅非web编译时为false
+  const isUnaryTag = options.isUnaryTag || no // 标签在平台上是否是一元的
   const canBeLeftOpenTag = options.canBeLeftOpenTag || no
   let index = 0
   let last, lastTag
   while (html) {
     last = html
     // Make sure we're not in a plaintext content element like script/style
+    // 确认lastTag不是script、style、textarea
     if (!lastTag || !isPlainTextElement(lastTag)) {
-      let textEnd = html.indexOf('<')
+      let textEnd = html.indexOf('<') // 文本结束的位置，即标签开始的位置
       if (textEnd === 0) {
         // Comment:
-        if (comment.test(html)) {
+        if (comment.test(html)) { // html是注释
           const commentEnd = html.indexOf('-->')
 
           if (commentEnd >= 0) {
@@ -78,7 +85,7 @@ export function parseHTML (html, options) {
         }
 
         // http://en.wikipedia.org/wiki/Conditional_comment#Downlevel-revealed_conditional_comment
-        if (conditionalComment.test(html)) {
+        if (conditionalComment.test(html)) { // html是条件语句，以<![开头
           const conditionalEnd = html.indexOf(']>')
 
           if (conditionalEnd >= 0) {
@@ -89,13 +96,13 @@ export function parseHTML (html, options) {
 
         // Doctype:
         const doctypeMatch = html.match(doctype)
-        if (doctypeMatch) {
+        if (doctypeMatch) { // html是<!DOCTYPE节点
           advance(doctypeMatch[0].length)
           continue
         }
 
         // End tag:
-        const endTagMatch = html.match(endTag)
+        const endTagMatch = html.match(endTag) // html是结束标签
         if (endTagMatch) {
           const curIndex = index
           advance(endTagMatch[0].length)
