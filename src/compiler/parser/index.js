@@ -96,7 +96,7 @@ export function parse (
   platformIsPreTag = options.isPreTag || no // 函数：标签是否需要保留空白
   platformMustUseProp = options.mustUseProp || no // 函数：特性（attribute）是否需要被绑定为属性（property）
   platformGetTagNamespace = options.getTagNamespace || no // 函数：检查标签的命名空间
-  const isReservedTag = options.isReservedTag || no
+  const isReservedTag = options.isReservedTag || no // 函数：标签在平台上是否是原生的
   maybeComponent = (el: ASTElement) => !!el.component || !isReservedTag(el.tag)
 
   transforms = pluckModuleFunction(options.modules, 'transformNode') // 返回平台特殊模块配置中，属性名为transformNode的非空值

@@ -27,7 +27,7 @@ export class CodegenState { // render函数生成状态
     this.transforms = pluckModuleFunction(options.modules, 'transformCode')
     this.dataGenFns = pluckModuleFunction(options.modules, 'genData')
     this.directives = extend(extend({}, baseDirectives), options.directives)
-    const isReservedTag = options.isReservedTag || no // 标签在平台上是否是原生的
+    const isReservedTag = options.isReservedTag || no // 函数：标签在平台上是否是原生的
     this.maybeComponent = (el: ASTElement) => !!el.component || !isReservedTag(el.tag)
     this.onceId = 0
     this.staticRenderFns = []
