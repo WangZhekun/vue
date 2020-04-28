@@ -1,5 +1,9 @@
 /* @flow */
 
+/**
+ * 该模块为调度程序模块
+ */
+
 import type Watcher from './watcher'
 import config from '../config'
 import { callHook, activateChildComponent } from '../instance/lifecycle'
@@ -14,16 +18,17 @@ import {
 
 export const MAX_UPDATE_COUNT = 100
 
-const queue: Array<Watcher> = []
+const queue: Array<Watcher> = [] // Watcher队列
 const activatedChildren: Array<Component> = []
-let has: { [key: number]: ?true } = {}
+let has: { [key: number]: ?true } = {} // Watcher队列的缓存标志
 let circular: { [key: number]: number } = {}
-let waiting = false
-let flushing = false
-let index = 0
+let waiting = false // 调度程序执行完毕前的等待标志
+let flushing = false // 调度程序正在执行
+let index = 0 // 调度程序正在执行的Watcher队列的索引
 
 /**
  * Reset the scheduler's state.
+ * 重置队列状态
  */
 function resetSchedulerState () {
   index = queue.length = activatedChildren.length = 0
@@ -39,9 +44,11 @@ function resetSchedulerState () {
 // if the page has thousands of event listeners. Instead, we take a timestamp
 // every time the scheduler flushes and use that for all event listeners
 // attached during that flush.
+// 最新一次调度程序执行开始的时间戳
 export let currentFlushTimestamp = 0
 
 // Async edge case fix requires storing an event listener's attach timestamp.
+// 函数：返回当前时间戳
 let getNow: () => number = Date.now
 
 // Determine what event timestamp the browser is using. Annoyingly, the
@@ -67,32 +74,37 @@ if (inBrowser && !isIE) {
 
 /**
  * Flush both queues and run the watchers.
+ * 执行watcher队列中各Watcher实例的调度程序接口
  */
 function flushSchedulerQueue () {
-  currentFlushTimestamp = getNow()
-  flushing = true
+  currentFlushTimestamp = getNow() // 时间戳
+  flushing = true // 调度程序执行标志
   let watcher, id
 
   // Sort queue before flush.
+  // 按照Watcher实例的id排序
   // This ensures that:
   // 1. Components are updated from parent to child. (because parent is always
   //    created before the child)
+  //    组件更新是父组件先更新，子组件后更新（因为父组件实例先创建）
   // 2. A component's user watchers are run before its render watcher (because
   //    user watchers are created before the render watcher)
+  //    组件的用户自定义Watcher先执行，render watcher后执行（因为用户自定义watcher先创建）
   // 3. If a component is destroyed during a parent component's watcher run,
   //    its watchers can be skipped.
-  queue.sort((a, b) => a.id - b.id)
+  //    如果在父组件执行watcher时，子组件销毁，那么该子组件的watcher会被忽略
+  queue.sort((a, b) => a.id - b.id) //
 
   // do not cache length because more watchers might be pushed
   // as we run existing watchers
-  for (index = 0; index < queue.length; index++) {
+  for (index = 0; index < queue.length; index++) { // 遍历队列，保存当前执行队列的索引
     watcher = queue[index]
     if (watcher.before) {
       watcher.before()
     }
     id = watcher.id
-    has[id] = null
-    watcher.run()
+    has[id] = null // 清空队列标志
+    watcher.run() // 执行调度程序接口
     // in dev build, check and stop circular updates.
     if (process.env.NODE_ENV !== 'production' && has[id] != null) {
       circular[id] = (circular[id] || 0) + 1
@@ -111,14 +123,14 @@ function flushSchedulerQueue () {
   }
 
   // keep copies of post queues before resetting state
-  const activatedQueue = activatedChildren.slice()
-  const updatedQueue = queue.slice()
+  const activatedQueue = activatedChildren.slice() // 复制活跃的子组件列表
+  const updatedQueue = queue.slice() // 复制队列
 
-  resetSchedulerState()
+  resetSchedulerState() // 重置队列状态
 
   // call component updated and activated hooks
-  callActivatedHooks(activatedQueue)
-  callUpdatedHooks(updatedQueue)
+  callActivatedHooks(activatedQueue) // 激活列表中的各组件树
+  callUpdatedHooks(updatedQueue) // 执行watcher队列中各Watcher实例对应的Vue实例的updated钩子列表
 
   // devtool hook
   /* istanbul ignore if */
@@ -127,9 +139,13 @@ function flushSchedulerQueue () {
   }
 }
 
+/**
+ * 执行watcher队列中各Watcher实例对应的Vue实例的updated钩子列表
+ * @param {Array<Watcher>} queue watcher队列
+ */
 function callUpdatedHooks (queue) {
   let i = queue.length
-  while (i--) {
+  while (i--) { // 遍历队列
     const watcher = queue[i]
     const vm = watcher.vm
     if (vm._watcher === watcher && vm._isMounted && !vm._isDestroyed) {
@@ -145,14 +161,18 @@ function callUpdatedHooks (queue) {
 export function queueActivatedComponent (vm: Component) {
   // setting _inactive to false here so that a render function can
   // rely on checking whether it's in an inactive tree (e.g. router-view)
-  vm._inactive = false
+  vm._inactive = false // 置不活跃标志为false
   activatedChildren.push(vm)
 }
 
+/**
+ * 激活列表中的各组件树
+ * @param {Array<Component>} queue 组件列表
+ */
 function callActivatedHooks (queue) {
-  for (let i = 0; i < queue.length; i++) {
-    queue[i]._inactive = true
-    activateChildComponent(queue[i], true /* true */)
+  for (let i = 0; i < queue.length; i++) { // 遍历组件列表
+    queue[i]._inactive = true // 置不活跃标志为true
+    activateChildComponent(queue[i], true /* true */) // 激活组件树
   }
 }
 
@@ -160,13 +180,14 @@ function callActivatedHooks (queue) {
  * Push a watcher into the watcher queue.
  * Jobs with duplicate IDs will be skipped unless it's
  * pushed when the queue is being flushed.
+ * 将Watcher实例加入到队列
  */
 export function queueWatcher (watcher: Watcher) {
-  const id = watcher.id
+  const id = watcher.id // watcher实例编号
   if (has[id] == null) {
-    has[id] = true
-    if (!flushing) {
-      queue.push(watcher)
+    has[id] = true // 添加缓存标志
+    if (!flushing) { // 调度程序未执行
+      queue.push(watcher) // 加入队列
     } else {
       // if already flushing, splice the watcher based on its id
       // if already past its id, it will be run next immediately.
@@ -174,17 +195,17 @@ export function queueWatcher (watcher: Watcher) {
       while (i > index && queue[i].id > watcher.id) {
         i--
       }
-      queue.splice(i + 1, 0, watcher)
+      queue.splice(i + 1, 0, watcher) // 将watcher插入队列，插入位置按照watcher的编号排序，但该位置必须在当前执行的队列索引位置之后
     }
     // queue the flush
-    if (!waiting) {
-      waiting = true
+    if (!waiting) { // 等待标志为ture，表示已经注册了时间片的回调
+      waiting = true // 置等待标志
 
       if (process.env.NODE_ENV !== 'production' && !config.async) {
         flushSchedulerQueue()
         return
       }
-      nextTick(flushSchedulerQueue)
+      nextTick(flushSchedulerQueue) // 时间片结束之后执行调度队列
     }
   }
 }

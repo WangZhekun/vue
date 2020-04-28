@@ -1,21 +1,29 @@
 /* @flow */
 /* globals MutationObserver */
 
+/**
+ * 该文件为next-tick的定义和执行
+ * 主要用到的技术是Promise的异步执行或setTimeout(fn, 0)的异步执行，即待主线程结束之后，执行回调方法
+ */
+
 import { noop } from 'shared/util'
 import { handleError } from './error'
 import { isIE, isIOS, isNative } from './env'
 
 export let isUsingMicroTask = false
 
-const callbacks = []
-let pending = false
+const callbacks = [] // 时间片结束的回调函数的队列
+let pending = false // 定时器创建标志
 
+/**
+ * 定时器的回调函数
+ */
 function flushCallbacks () {
-  pending = false
-  const copies = callbacks.slice(0)
-  callbacks.length = 0
+  pending = false // 定时器标志置为false
+  const copies = callbacks.slice(0) // 复制回调队列
+  callbacks.length = 0 // 清空回调队列
   for (let i = 0; i < copies.length; i++) {
-    copies[i]()
+    copies[i]() // 执行时间片结束的回调方法
   }
 }
 
@@ -30,7 +38,7 @@ function flushCallbacks () {
 // where microtasks have too high a priority and fire in between supposedly
 // sequential events (e.g. #4521, #6690, which have workarounds)
 // or even between bubbling of the same event (#6566).
-let timerFunc
+let timerFunc // 定时器，回调函数为flushCallbacks
 
 // The nextTick behavior leverages the microtask queue, which can be accessed
 // via either native Promise.then or MutationObserver.
@@ -84,9 +92,14 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
   }
 }
 
+/**
+ * 注册时间片（下次 DOM 更新循环）结束的回调
+ * @param {Function} cb 回调函数
+ * @param {Object} ctx 回调函数的执行上下文
+ */
 export function nextTick (cb?: Function, ctx?: Object) {
   let _resolve
-  callbacks.push(() => {
+  callbacks.push(() => { // 加入到回调队列中
     if (cb) {
       try {
         cb.call(ctx)
@@ -99,7 +112,7 @@ export function nextTick (cb?: Function, ctx?: Object) {
   })
   if (!pending) {
     pending = true
-    timerFunc()
+    timerFunc() // 创建定时器
   }
   // $flow-disable-line
   if (!cb && typeof Promise !== 'undefined') {

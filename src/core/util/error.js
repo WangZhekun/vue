@@ -33,6 +33,14 @@ export function handleError (err: Error, vm: any, info: string) {
   }
 }
 
+/**
+ * 执行handler
+ * @param {Function} handler 钩子
+ * @param {any} context 钩子的执行上下文
+ * @param {null | any[]} args 钩子的参数列表
+ * @param {any} vm Vue实例
+ * @param {string} info 钩子信息
+ */
 export function invokeWithErrorHandling (
   handler: Function,
   context: any,

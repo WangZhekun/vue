@@ -138,6 +138,12 @@ export function lifecycleMixin (Vue: Class<Component>) {
   }
 }
 
+/**
+ * 创建模板对应的Watcher实例，完成模板渲染
+ * @param {Component} vm Vue实例
+ * @param {Element} el 挂载点
+ * @param {boolean} hydrating
+ */
 export function mountComponent (
   vm: Component,
   el: ?Element,
@@ -145,7 +151,7 @@ export function mountComponent (
 ): Component {
   vm.$el = el
   if (!vm.$options.render) {
-    vm.$options.render = createEmptyVNode
+    vm.$options.render = createEmptyVNode // 如果不存在render函数，则将其置为创建空节点函数
     if (process.env.NODE_ENV !== 'production') {
       /* istanbul ignore if */
       if ((vm.$options.template && vm.$options.template.charAt(0) !== '#') ||
@@ -164,7 +170,7 @@ export function mountComponent (
       }
     }
   }
-  callHook(vm, 'beforeMount')
+  callHook(vm, 'beforeMount') // 触发beforeMount生命周期钩子
 
   let updateComponent
   /* istanbul ignore if */
@@ -186,7 +192,7 @@ export function mountComponent (
       measure(`vue ${name} patch`, startTag, endTag)
     }
   } else {
-    updateComponent = () => {
+    updateComponent = () => { // 该方法作为Watcher实例的getter方法，完成了模板中所有绑定数据的getter访问
       vm._update(vm._render(), hydrating)
     }
   }
@@ -194,8 +200,9 @@ export function mountComponent (
   // we set this to vm._watcher inside the watcher's constructor
   // since the watcher's initial patch may call $forceUpdate (e.g. inside child
   // component's mounted hook), which relies on vm._watcher being already defined
+  // 创建Watcher实例，在该类的构造函数内，关联Watcher实例与当前Vue实例的关联关系
   new Watcher(vm, updateComponent, noop, {
-    before () {
+    before () { // Watcher更新数据前的回调函数
       if (vm._isMounted && !vm._isDestroyed) {
         callHook(vm, 'beforeUpdate')
       }
@@ -205,9 +212,9 @@ export function mountComponent (
 
   // manually mounted instance, call mounted on self
   // mounted is called for render-created child components in its inserted hook
-  if (vm.$vnode == null) {
+  if (vm.$vnode == null) { // TODO: $vnode什么情况下为null
     vm._isMounted = true
-    callHook(vm, 'mounted')
+    callHook(vm, 'mounted') // 挂载结束，触发mounted生命周期钩子
   }
   return vm
 }
@@ -299,6 +306,11 @@ function isInInactiveTree (vm) {
   return false
 }
 
+/**
+ * 激活keep-alive缓存的组件树
+ * @param {Component} vm Vue实例
+ * @param {boolean} direct
+ */
 export function activateChildComponent (vm: Component, direct?: boolean) {
   if (direct) {
     vm._directInactive = false
@@ -308,8 +320,8 @@ export function activateChildComponent (vm: Component, direct?: boolean) {
   } else if (vm._directInactive) {
     return
   }
-  if (vm._inactive || vm._inactive === null) {
-    vm._inactive = false
+  if (vm._inactive || vm._inactive === null) { // 组件不活跃
+    vm._inactive = false // 激活
     for (let i = 0; i < vm.$children.length; i++) {
       activateChildComponent(vm.$children[i])
     }
@@ -317,6 +329,11 @@ export function activateChildComponent (vm: Component, direct?: boolean) {
   }
 }
 
+/**
+ * 使keep-alive缓存的组件树失活
+ * @param {Component} vm Vue实例
+ * @param {boolean} direct
+ */
 export function deactivateChildComponent (vm: Component, direct?: boolean) {
   if (direct) {
     vm._directInactive = true
@@ -333,18 +350,23 @@ export function deactivateChildComponent (vm: Component, direct?: boolean) {
   }
 }
 
+/**
+ * 执行vm上指定的钩子列表
+ * @param {Component} vm Vue实例
+ * @param {string} hook 钩子名称
+ */
 export function callHook (vm: Component, hook: string) {
   // #7573 disable dep collection when invoking lifecycle hooks
   pushTarget()
-  const handlers = vm.$options[hook]
+  const handlers = vm.$options[hook] // 取hook对应的钩子列表
   const info = `${hook} hook`
   if (handlers) {
-    for (let i = 0, j = handlers.length; i < j; i++) {
-      invokeWithErrorHandling(handlers[i], vm, null, vm, info)
+    for (let i = 0, j = handlers.length; i < j; i++) { // 遍历钩子
+      invokeWithErrorHandling(handlers[i], vm, null, vm, info) // 执行钩子
     }
   }
   if (vm._hasHookEvent) {
-    vm.$emit('hook:' + hook)
+    vm.$emit('hook:' + hook) // 触发事件
   }
   popTarget()
 }

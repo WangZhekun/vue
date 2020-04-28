@@ -14,19 +14,19 @@ export type Config = {
   silent: boolean;
   productionTip: boolean;
   performance: boolean;
-  devtools: boolean;
+  devtools: boolean; // 开发者工具是否可用
   errorHandler: ?(err: Error, vm: Component, info: string) => void;
   warnHandler: ?(msg: string, vm: Component, trace: string) => void;
   ignoredElements: Array<string | RegExp>;
   keyCodes: { [key: string]: number | Array<number> };
 
   // platform
-  isReservedTag: (x?: string) => boolean;
-  isReservedAttr: (x?: string) => boolean;
-  parsePlatformTagName: (x: string) => string;
-  isUnknownElement: (x?: string) => boolean;
-  getTagNamespace: (x?: string) => string | void;
-  mustUseProp: (tag: string, type: ?string, name: string) => boolean;
+  isReservedTag: (x?: string) => boolean; // 函数：标签在平台上是否是原生的
+  isReservedAttr: (x?: string) => boolean; // 函数：特性（attribute）是否被保留
+  parsePlatformTagName: (x: string) => string; // 函数：转换为平台的实际标签名称
+  isUnknownElement: (x?: string) => boolean; // 函数：标签是否为未知节点
+  getTagNamespace: (x?: string) => string | void; // 函数：检查标签的命名空间
+  mustUseProp: (tag: string, type: ?string, name: string) => boolean; // 函数：特性（attribute）是否需要被绑定为属性（property）
 
   // private
   async: boolean;

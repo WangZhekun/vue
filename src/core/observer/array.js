@@ -6,7 +6,7 @@
 import { def } from '../util/index'
 
 const arrayProto = Array.prototype
-export const arrayMethods = Object.create(arrayProto)
+export const arrayMethods = Object.create(arrayProto) // 以Array.prototype为原型创建对象
 
 const methodsToPatch = [
   'push',
