@@ -26,7 +26,7 @@ const genStaticKeysCached = cached(genStaticKeys) // 生成genStaticKeys的执�
 export function optimize (root: ?ASTElement, options: CompilerOptions) {
   if (!root) return
   isStaticKey = genStaticKeysCached(options.staticKeys || '') // 生成ASTElement的静态属性到true的Map
-  isPlatformReservedTag = options.isReservedTag || no // 函数标签在平台上是否是原生的
+  isPlatformReservedTag = options.isReservedTag || no // 函数：标签在平台上是否是原生的
   // first pass: mark all non-static nodes.
   markStatic(root) // 标记root数的static属性
   // second pass: mark static roots.
