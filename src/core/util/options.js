@@ -26,7 +26,7 @@ import {
  * how to merge a parent option value and a child option
  * value into the final value.
  */
-const strats = config.optionMergeStrategies
+const strats = config.optionMergeStrategies // 配置项的属性合并策略
 
 /**
  * Options with restrictions
@@ -44,6 +44,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 /**
+ * 递归合并对象
  * Helper that recursively merges two data objects together.
  */
 function mergeData (to: Object, from: ?Object): Object {
@@ -51,7 +52,7 @@ function mergeData (to: Object, from: ?Object): Object {
   let key, toVal, fromVal
 
   const keys = hasSymbol
-    ? Reflect.ownKeys(from)
+    ? Reflect.ownKeys(from) // 返回所有自有属性
     : Object.keys(from)
 
   for (let i = 0; i < keys.length; i++) {
@@ -60,13 +61,13 @@ function mergeData (to: Object, from: ?Object): Object {
     if (key === '__ob__') continue
     toVal = to[key]
     fromVal = from[key]
-    if (!hasOwn(to, key)) {
+    if (!hasOwn(to, key)) { // 如果目标对象中不包含源对象中的属性
       set(to, key, fromVal)
     } else if (
       toVal !== fromVal &&
       isPlainObject(toVal) &&
       isPlainObject(fromVal)
-    ) {
+    ) { // 目标对象中包含源对象的属性，且值不同，且两个值都是对象。值非对象的不合并
       mergeData(toVal, fromVal)
     }
   }
@@ -74,6 +75,7 @@ function mergeData (to: Object, from: ?Object): Object {
 }
 
 /**
+ * 获取响应式数据合并函数
  * Data
  */
 export function mergeDataOrFn (
@@ -95,7 +97,7 @@ export function mergeDataOrFn (
     // check if parentVal is a function here because
     // it has to be a function to pass previous merges.
     return function mergedDataFn () {
-      return mergeData(
+      return mergeData( // 递归合并对象
         typeof childVal === 'function' ? childVal.call(this, this) : childVal,
         typeof parentVal === 'function' ? parentVal.call(this, this) : parentVal
       )
@@ -110,7 +112,7 @@ export function mergeDataOrFn (
         ? parentVal.call(vm, vm)
         : parentVal
       if (instanceData) {
-        return mergeData(instanceData, defaultData)
+        return mergeData(instanceData, defaultData) // 递归合并对象
       } else {
         return defaultData
       }
@@ -118,6 +120,9 @@ export function mergeDataOrFn (
   }
 }
 
+/**
+ * 响应式数据合并，该方法返回的是合并函数
+ */
 strats.data = function (
   parentVal: any,
   childVal: any,
@@ -141,6 +146,7 @@ strats.data = function (
 }
 
 /**
+ * 合并属性和钩子，主要是数组处理
  * Hooks and props are merged as arrays.
  */
 function mergeHook (
@@ -155,10 +161,14 @@ function mergeHook (
         : [childVal]
     : parentVal
   return res
-    ? dedupeHooks(res)
+    ? dedupeHooks(res) // 去重
     : res
 }
 
+/**
+ * 钩子去重
+ * @param {Array} hooks 钩子列表
+ */
 function dedupeHooks (hooks) {
   const res = []
   for (let i = 0; i < hooks.length; i++) {
@@ -169,11 +179,12 @@ function dedupeHooks (hooks) {
   return res
 }
 
-LIFECYCLE_HOOKS.forEach(hook => {
+LIFECYCLE_HOOKS.forEach(hook => { // 属性和钩子的合并策略
   strats[hook] = mergeHook
 })
 
 /**
+ * 组件、过滤器、指令合并策略
  * Assets
  *
  * When a vm is present (instance creation), we need to do
@@ -195,11 +206,12 @@ function mergeAssets (
   }
 }
 
-ASSET_TYPES.forEach(function (type) {
+ASSET_TYPES.forEach(function (type) { // 组件、过滤器、指令的合并策略
   strats[type + 's'] = mergeAssets
 })
 
 /**
+ * watchers的合并策略
  * Watchers.
  *
  * Watchers hashes should not overwrite one
@@ -212,6 +224,7 @@ strats.watch = function (
   key: string
 ): ?Object {
   // work around Firefox's Object.prototype.watch...
+  // 待合并的两个值是Firefox的对象的原生watch方法
   if (parentVal === nativeWatch) parentVal = undefined
   if (childVal === nativeWatch) childVal = undefined
   /* istanbul ignore if */
@@ -223,19 +236,20 @@ strats.watch = function (
   const ret = {}
   extend(ret, parentVal)
   for (const key in childVal) {
-    let parent = ret[key]
-    const child = childVal[key]
-    if (parent && !Array.isArray(parent)) {
+    let parent = ret[key] // 取parentVal中的key
+    const child = childVal[key] // 取childVal中的key
+    if (parent && !Array.isArray(parent)) { // 转数组
       parent = [parent]
     }
     ret[key] = parent
       ? parent.concat(child)
-      : Array.isArray(child) ? child : [child]
+      : Array.isArray(child) ? child : [child] // 合并数组
   }
   return ret
 }
 
 /**
+ * 属性、方法、注入、计算属性的合并策略
  * Other object hashes.
  */
 strats.props =
@@ -256,9 +270,13 @@ strats.computed = function (
   if (childVal) extend(ret, childVal)
   return ret
 }
+/**
+ * provide的合并策略
+ */
 strats.provide = mergeDataOrFn
 
 /**
+ * 默认合并策略
  * Default strategy.
  */
 const defaultStrat = function (parentVal: any, childVal: any): any {
@@ -268,6 +286,7 @@ const defaultStrat = function (parentVal: any, childVal: any): any {
 }
 
 /**
+ * 校验组件名称
  * Validate component names
  */
 function checkComponents (options: Object) {
@@ -295,27 +314,32 @@ export function validateComponentName (name: string) {
  * Ensure all props option syntax are normalized into the
  * Object-based format.
  */
+/**
+ * 标准化配置项中的组件属性
+ * @param {Object} options 配置项对象
+ * @param {Component} vm Vue实例
+ */
 function normalizeProps (options: Object, vm: ?Component) {
-  const props = options.props
+  const props = options.props // 取属性
   if (!props) return
   const res = {}
   let i, val, name
-  if (Array.isArray(props)) {
+  if (Array.isArray(props)) { // 属性为数组
     i = props.length
     while (i--) {
       val = props[i]
-      if (typeof val === 'string') {
-        name = camelize(val)
-        res[name] = { type: null }
+      if (typeof val === 'string') { // 数组元素为字符串
+        name = camelize(val) // 转成驼峰
+        res[name] = { type: null } // 定义组件属性描述对象
       } else if (process.env.NODE_ENV !== 'production') {
         warn('props must be strings when using array syntax.')
       }
     }
-  } else if (isPlainObject(props)) {
+  } else if (isPlainObject(props)) { // 属性为纯对象
     for (const key in props) {
       val = props[key]
-      name = camelize(key)
-      res[name] = isPlainObject(val)
+      name = camelize(key) // 转驼峰
+      res[name] = isPlainObject(val) // 如果配置中的属性的值为纯对象，则该对象作为描述对象，否则作为描述对象中的类型
         ? val
         : { type: val }
     }
@@ -332,17 +356,22 @@ function normalizeProps (options: Object, vm: ?Component) {
 /**
  * Normalize all injections into Object-based format
  */
+/**
+ * 标准化配置项中的注入项
+ * @param {Object} options 配置项对象
+ * @param {Component} vm Vue实例
+ */
 function normalizeInject (options: Object, vm: ?Component) {
-  const inject = options.inject
+  const inject = options.inject // 配置对象中的注入项
   if (!inject) return
   const normalized = options.inject = {}
-  if (Array.isArray(inject)) {
+  if (Array.isArray(inject)) { // 注入项为数组
     for (let i = 0; i < inject.length; i++) {
       normalized[inject[i]] = { from: inject[i] }
     }
-  } else if (isPlainObject(inject)) {
+  } else if (isPlainObject(inject)) { // 注入项为对象
     for (const key in inject) {
-      const val = inject[key]
+      const val = inject[key] // 对象的属性为注入的名称
       normalized[key] = isPlainObject(val)
         ? extend({ from: key }, val)
         : { from: val }
@@ -358,6 +387,10 @@ function normalizeInject (options: Object, vm: ?Component) {
 
 /**
  * Normalize raw function directives into object format.
+ */
+/**
+ * 标准化配置项中的指令
+ * @param {Object} options 配置项对象
  */
 function normalizeDirectives (options: Object) {
   const dirs = options.directives
@@ -385,6 +418,12 @@ function assertObjectType (name: string, value: any, vm: ?Component) {
  * Merge two option objects into a new one.
  * Core utility used in both instantiation and inheritance.
  */
+/**
+ * 合并配置对象
+ * @param {Object} parent 待合并配置对象
+ * @param {Object} child 待合并配置对象，或有一个配置对象的函数
+ * @param {Component} vm Vue实例
+ */
 export function mergeOptions (
   parent: Object,
   child: Object,
@@ -394,32 +433,32 @@ export function mergeOptions (
     checkComponents(child)
   }
 
-  if (typeof child === 'function') {
+  if (typeof child === 'function') { // 处理child为函数的情况
     child = child.options
   }
 
-  normalizeProps(child, vm)
-  normalizeInject(child, vm)
-  normalizeDirectives(child)
+  normalizeProps(child, vm) // 标准化child中的组件属性
+  normalizeInject(child, vm) // 标准化child中的注入项
+  normalizeDirectives(child) // 标准化child中的指令
 
   // Apply extends and mixins on the child options,
   // but only if it is a raw options object that isn't
   // the result of another mergeOptions call.
   // Only merged options has the _base property.
-  if (!child._base) {
-    if (child.extends) {
+  if (!child._base) { // _base为Vue构造函数 TODO：为什么要child._base为空时，合并extends和mixins
+    if (child.extends) { // 如果child有扩展配置，则递归调用mergeOptions，合并扩展配置和parent
       parent = mergeOptions(parent, child.extends, vm)
     }
-    if (child.mixins) {
+    if (child.mixins) { // 混入配置
       for (let i = 0, l = child.mixins.length; i < l; i++) {
-        parent = mergeOptions(parent, child.mixins[i], vm)
+        parent = mergeOptions(parent, child.mixins[i], vm) // 递归调用mergeOptions，将每个混入对象合并到parent
       }
     }
   }
 
   const options = {}
   let key
-  for (key in parent) {
+  for (key in parent) { // 逐个属性合并
     mergeField(key)
   }
   for (key in child) {
@@ -428,16 +467,21 @@ export function mergeOptions (
     }
   }
   function mergeField (key) {
-    const strat = strats[key] || defaultStrat
+    const strat = strats[key] || defaultStrat // 获取指定属性的合并策略
     options[key] = strat(parent[key], child[key], vm, key)
   }
   return options
 }
 
 /**
+ * 访问options[type][id]的值，包括id的驼峰格式和首字母大写格式
  * Resolve an asset.
  * This function is used because child instances need access
  * to assets defined in its ancestor chain.
+ * @param {Object} options 配置对象
+ * @param {string} type 属性名
+ * @param {string} id 属性值的属性名
+ * @param {boolean} warnMissing 是否不要发警告
  */
 export function resolveAsset (
   options: Object,

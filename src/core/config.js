@@ -37,6 +37,7 @@ export type Config = {
 
 export default ({
   /**
+   * 配置项的属性合并策略
    * Option merge strategies (used in core/util/options)
    */
   // $flow-disable-line
