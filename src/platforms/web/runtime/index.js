@@ -31,7 +31,7 @@ extend(Vue.options.directives, platformDirectives) // 合并自定义指令和�
 extend(Vue.options.components, platformComponents) // 合并自定义组件和平台默认组件
 
 // install platform patch function
-Vue.prototype.__patch__ = inBrowser ? patch : noop
+Vue.prototype.__patch__ = inBrowser ? patch : noop // 创建、更新、删除VNode的函数
 
 // public mount method
 /**

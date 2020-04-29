@@ -46,6 +46,10 @@ export function nextSibling (node: Node): ?Node {
   return node.nextSibling
 }
 
+/**
+ * 获取node的节点名称
+ * @param {Element} node 节点
+ */
 export function tagName (node: Element): string {
   return node.tagName
 }

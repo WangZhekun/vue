@@ -17,6 +17,11 @@ export default {
   }
 }
 
+/**
+ * 引用注册，或删除
+ * @param {VNodeWithData} vnode 待注册（删除）的虚拟节点
+ * @param {boolean} isRemoval 删除标志
+ */
 export function registerRef (vnode: VNodeWithData, isRemoval: ?boolean) {
   const key = vnode.data.ref
   if (!isDef(key)) return

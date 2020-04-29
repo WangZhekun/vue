@@ -45,7 +45,7 @@ export function toggleObserving (value: boolean) {
 export class Observer {
   value: any; // 目标对象
   dep: Dep; // 依赖
-  vmCount: number; // number of vms that have this object as root $data
+  vmCount: number; // 当前监听器对象作为Vue实例的根数据对象的数量 number of vms that have this object as root $data
 
   constructor (value: any) {
     this.value = value
@@ -228,40 +228,51 @@ export function defineReactive (
  * triggers change notification if the property doesn't
  * already exist.
  */
+/**
+ * 给指定（响应式）对象/数组添加属性（，属性值也是响应式的）
+ * @param {Array<any> | Object} target 目标对象/数组
+ * @param {any} key 属性名
+ * @param {any} val 属性值
+ */
 export function set (target: Array<any> | Object, key: any, val: any): any {
   if (process.env.NODE_ENV !== 'production' &&
     (isUndef(target) || isPrimitive(target))
   ) {
     warn(`Cannot set reactive property on undefined, null, or primitive value: ${(target: any)}`)
   }
-  if (Array.isArray(target) && isValidArrayIndex(key)) {
+  if (Array.isArray(target) && isValidArrayIndex(key)) { // target为数组，且key为合法数组索引
     target.length = Math.max(target.length, key)
     target.splice(key, 1, val)
     return val
   }
-  if (key in target && !(key in Object.prototype)) {
+  if (key in target && !(key in Object.prototype)) { // key已经是target的属性，但不是Object的原型的属性
     target[key] = val
     return val
   }
-  const ob = (target: any).__ob__
-  if (target._isVue || (ob && ob.vmCount)) {
+  const ob = (target: any).__ob__ // 监听器对象
+  if (target._isVue || (ob && ob.vmCount)) { // target是Vue实例，或target是Vue实例的根数据对象，即根数据对象不允许添加新属性 TODO: 为什么
     process.env.NODE_ENV !== 'production' && warn(
       'Avoid adding reactive properties to a Vue instance or its root $data ' +
       'at runtime - declare it upfront in the data option.'
     )
     return val
   }
-  if (!ob) {
+  if (!ob) { // 监听器对象不存在
     target[key] = val
     return val
   }
-  defineReactive(ob.value, key, val)
-  ob.dep.notify()
+  defineReactive(ob.value, key, val) // 给target定义一个响应式的属性key TODO：这里为什么不用target
+  ob.dep.notify() // 通知更新
   return val
 }
 
 /**
  * Delete a property and trigger change if necessary.
+ */
+/**
+ * 删除指定对象/数组的自有属性/索引
+ * @param {Array<any> | Object} target 目标对象/数组
+ * @param {any} key 待删除的属性名
  */
 export function del (target: Array<any> | Object, key: any) {
   if (process.env.NODE_ENV !== 'production' &&
@@ -269,26 +280,26 @@ export function del (target: Array<any> | Object, key: any) {
   ) {
     warn(`Cannot delete reactive property on undefined, null, or primitive value: ${(target: any)}`)
   }
-  if (Array.isArray(target) && isValidArrayIndex(key)) {
-    target.splice(key, 1)
+  if (Array.isArray(target) && isValidArrayIndex(key)) { // target是数组，且key是合法的数组索引
+    target.splice(key, 1) // 删除
     return
   }
-  const ob = (target: any).__ob__
-  if (target._isVue || (ob && ob.vmCount)) {
+  const ob = (target: any).__ob__ // 监听器实例
+  if (target._isVue || (ob && ob.vmCount)) { // target是Vue实例，或target是Vue实例的根数据对象，即根数据对象不允许添加新属性
     process.env.NODE_ENV !== 'production' && warn(
       'Avoid deleting properties on a Vue instance or its root $data ' +
       '- just set it to null.'
     )
     return
   }
-  if (!hasOwn(target, key)) {
+  if (!hasOwn(target, key)) { // key不是target的自有属性
     return
   }
-  delete target[key]
+  delete target[key] // 删除
   if (!ob) {
     return
   }
-  ob.dep.notify()
+  ob.dep.notify() // 通知更新
 }
 
 /**
