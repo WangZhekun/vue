@@ -22,10 +22,10 @@ function Vue (options) {
   this._init(options)
 }
 
-initMixin(Vue)
-stateMixin(Vue)
-eventsMixin(Vue)
-lifecycleMixin(Vue)
-renderMixin(Vue)
+initMixin(Vue) // 定义_init方法
+stateMixin(Vue) // 定义状态相关属性和方法：$data、$props、$set、$delete、$watch
+eventsMixin(Vue) // 定义事件相关方法：$on、$once、$off、$emit
+lifecycleMixin(Vue) // 定义生命周期相关方法：_update、$forceUpdate、$destroy
+renderMixin(Vue) // 定义渲染相关方法：$nextTick、_render
 
 export default Vue

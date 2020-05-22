@@ -22,7 +22,7 @@ export function initExtend (Vue: GlobalAPI) {
    */
   /**
    * 创建Vue类的子类
-   * @param {Object} extendOptions 配置项
+   * @param {Object} extendOptions 扩展配置对象
    */
   Vue.extend = function (extendOptions: Object): Function {
     extendOptions = extendOptions || {}

@@ -84,7 +84,7 @@ function createKeyToOldIdx (children, beginIdx, endIdx) {
 }
 
 /**
- * 获取创建、更新、删除VNode的函数
+ * 获取创建、更新、删除VNode树的函数
  * @param {Object} backend
  */
 export function createPatchFunction (backend) {
@@ -783,7 +783,7 @@ export function createPatchFunction (backend) {
   }
 
   /**
-   * 创建、更新、删除VNode
+   * 创建、更新、删除VNode树
    * @param {VNode | Element} oldVnode 旧VNode节点，或DOM节点
    * @param {VNode} vnode 新VNode节点
    * @param {boolean} hydrating 是否将DOM节点与vnode关联

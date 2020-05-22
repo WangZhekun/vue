@@ -3,15 +3,15 @@
 export default class VNode {
   tag: string | void;
   data: VNodeData | void;
-  children: ?Array<VNode>;
+  children: ?Array<VNode>; // 子节点
   text: string | void;
   elm: Node | void;
   ns: string | void;
-  context: Component | void; // rendered in this component's scope
+  context: Component | void; // 当前虚拟节点渲染的上下文（Vue实例） rendered in this component's scope
   key: string | number | void;
   componentOptions: VNodeComponentOptions | void;
   componentInstance: Component | void; // component instance
-  parent: VNode | void; // component placeholder node
+  parent: VNode | void; // component placeholder node 组件在父实例中的虚拟节点
 
   // strictly internal
   raw: boolean; // contains raw HTML? (server only)
@@ -29,6 +29,17 @@ export default class VNode {
   devtoolsMeta: ?Object; // used to store functional render context for devtools
   fnScopeId: ?string; // functional scope id support
 
+  /**
+   *
+   * @param {string} tag 标签名
+   * @param {VNodeData} data 虚拟节点的配置数据对象
+   * @param {Array<VNode>} children 子节点
+   * @param {string} text
+   * @param {Node} elm
+   * @param {Component} context 虚拟节点的渲染上下文（Vue实例）
+   * @param {VNodeComponentOptions} componentOptions
+   * @param {Function} asyncFactory
+   */
   constructor (
     tag?: string,
     data?: VNodeData,
@@ -78,6 +89,10 @@ export const createEmptyVNode = (text: string = '') => {
   return node
 }
 
+/**
+ * 创建文本虚拟节点
+ * @param {string | number} val 节点内容
+ */
 export function createTextVNode (val: string | number) {
   return new VNode(undefined, undefined, undefined, String(val))
 }

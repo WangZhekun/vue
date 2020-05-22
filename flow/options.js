@@ -74,9 +74,9 @@ declare type ComponentOptions = {
   // private
   _isComponent?: true;
   _propKeys?: Array<string>;
-  _parentVnode?: VNode;
-  _parentListeners?: ?Object;
-  _renderChildren?: ?Array<VNode>;
+  _parentVnode?: VNode; // 组件在父实例中的虚拟节点
+  _parentListeners?: ?Object; // 组件在父组件内的虚拟节点监听的事件
+  _renderChildren?: ?Array<VNode>; // 组件在父组件内的节点内的子虚拟节点列表
   _componentTag: ?string;
   _scopeId: ?string;
   _base: Class<Component>;

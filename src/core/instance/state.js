@@ -35,6 +35,12 @@ const sharedPropertyDefinition = {
   set: noop
 }
 
+/**
+ *
+ * @param {Object} target
+ * @param {string} sourceKey
+ * @param {string} key
+ */
 export function proxy (target: Object, sourceKey: string, key: string) {
   sharedPropertyDefinition.get = function proxyGetter () {
     return this[sourceKey][key]
@@ -207,24 +213,30 @@ function initComputed (vm: Component, computed: Object) {
   }
 }
 
+/**
+ * 给target定义计算属性key
+ * @param {any} target 目标对象
+ * @param {string} key 计算属性的属性名
+ * @param {Object | Function} userDef 自定义的计算属性的属性值
+ */
 export function defineComputed (
   target: any,
   key: string,
   userDef: Object | Function
 ) {
-  const shouldCache = !isServerRendering()
-  if (typeof userDef === 'function') {
+  const shouldCache = !isServerRendering() // 非服务端渲染，需要缓存
+  if (typeof userDef === 'function') { // 自定义的计算属性属性值为函数
     sharedPropertyDefinition.get = shouldCache
-      ? createComputedGetter(key)
-      : createGetterInvoker(userDef)
+      ? createComputedGetter(key) // 创建Vue实例的计算属性的get方法
+      : createGetterInvoker(userDef) // 创建Vue实例的计算属性的执行userDef的get方法
     sharedPropertyDefinition.set = noop
-  } else {
-    sharedPropertyDefinition.get = userDef.get
-      ? shouldCache && userDef.cache !== false
-        ? createComputedGetter(key)
-        : createGetterInvoker(userDef.get)
+  } else { // 自定义的计算属性属性值为对象
+    sharedPropertyDefinition.get = userDef.get // 存在get方法
+      ? shouldCache && userDef.cache !== false // 可以缓存
+        ? createComputedGetter(key) // 创建Vue实例的计算属性的get方法
+        : createGetterInvoker(userDef.get) // 创建Vue实例的计算属性的执行userDef.get的get方法
       : noop
-    sharedPropertyDefinition.set = userDef.set || noop
+    sharedPropertyDefinition.set = userDef.set || noop // 存在set方法
   }
   if (process.env.NODE_ENV !== 'production' &&
       sharedPropertyDefinition.set === noop) {
@@ -238,24 +250,32 @@ export function defineComputed (
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
 
+/**
+ * 创建Vue实例的计算属性的get方法
+ * @param {string} key 计算属性的属性名
+ */
 function createComputedGetter (key) {
   return function computedGetter () {
-    const watcher = this._computedWatchers && this._computedWatchers[key]
+    const watcher = this._computedWatchers && this._computedWatchers[key] // this指Vue实例，取计算属性对应的Watcher实例
     if (watcher) {
       if (watcher.dirty) {
-        watcher.evaluate()
+        watcher.evaluate() // 更新value，针对懒watcher
       }
       if (Dep.target) {
-        watcher.depend()
+        watcher.depend() // 更新watcher的依赖
       }
       return watcher.value
     }
   }
 }
 
+/**
+ * 创建Vue实例的计算属性的执行fn的get方法
+ * @param {Function}} fn 计算属性的get方法
+ */
 function createGetterInvoker(fn) {
   return function computedGetter () {
-    return fn.call(this, this)
+    return fn.call(this, this) // 执行get方法，this指Vue实例
   }
 }
 

@@ -16,7 +16,7 @@ const callbacks = [] // 时间片结束的回调函数的队列
 let pending = false // 定时器创建标志
 
 /**
- * 定时器的回调函数
+ * 定时器的回调函数，执行回调队列
  */
 function flushCallbacks () {
   pending = false // 定时器标志置为false
@@ -94,6 +94,7 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
 
 /**
  * 注册时间片（下次 DOM 更新循环）结束的回调
+ * 时间片的计时方式是利用Promise或setTimeout等计时器的主线程优先执行的特性，待主线程的所有Dep和Watcher实例都完成了各自的依赖更新和重新渲染之后，再执行nextTick注册的回调，即时间片结束
  * @param {Function} cb 回调函数
  * @param {Object} ctx 回调函数的执行上下文
  */

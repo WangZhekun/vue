@@ -29,25 +29,29 @@ export function setActiveInstance(vm: Component) {
   }
 }
 
+/**
+ * 初始化Vue实例的生命周期相关的属性
+ * @param {Component} vm Vue实例
+ */
 export function initLifecycle (vm: Component) {
-  const options = vm.$options
+  const options = vm.$options // 配置对象
 
   // locate first non-abstract parent
-  let parent = options.parent
-  if (parent && !options.abstract) {
+  let parent = options.parent // 父Vue实例
+  if (parent && !options.abstract) { // 将当前实例添加到父实例的$children中。TODO：abstract干什么的？
     while (parent.$options.abstract && parent.$parent) {
       parent = parent.$parent
     }
     parent.$children.push(vm)
   }
 
-  vm.$parent = parent
-  vm.$root = parent ? parent.$root : vm
+  vm.$parent = parent // 父实例
+  vm.$root = parent ? parent.$root : vm // 根Vue实例
 
-  vm.$children = []
-  vm.$refs = {}
+  vm.$children = [] // 子实例列表
+  vm.$refs = {} // 引用
 
-  vm._watcher = null
+  vm._watcher = null // 组件模板对应的Watcher实例
   vm._inactive = null
   vm._directInactive = false
   vm._isMounted = false
@@ -55,9 +59,18 @@ export function initLifecycle (vm: Component) {
   vm._isBeingDestroyed = false
 }
 
+/**
+ * 定义Vue原型的_update、$forceUpdate、$destroy API
+ * @param {Class<Component>} Vue Vue类
+ */
 export function lifecycleMixin (Vue: Class<Component>) {
+  /**
+   *
+   * @param {VNode} vnode 虚拟节点树
+   * @param {boolean} hydrating 是否将DOM节点与vnode关联
+   */
   Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
-    const vm: Component = this
+    const vm: Component = this // Vue实例
     const prevEl = vm.$el
     const prevVnode = vm._vnode
     const restoreActiveInstance = setActiveInstance(vm)
@@ -66,10 +79,10 @@ export function lifecycleMixin (Vue: Class<Component>) {
     // based on the rendering backend used.
     if (!prevVnode) {
       // initial render
-      vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */)
+      vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */) // 创建VNode树
     } else {
       // updates
-      vm.$el = vm.__patch__(prevVnode, vnode)
+      vm.$el = vm.__patch__(prevVnode, vnode) // 创建VNode树
     }
     restoreActiveInstance()
     // update __vue__ reference
@@ -253,7 +266,7 @@ export function updateChildComponent (
     hasDynamicScopedSlot
   )
 
-  vm.$options._parentVnode = parentVnode
+  vm.$options._parentVnode = parentVnode // _parentVnode为当前Vue实例在父实例中的虚拟节点
   vm.$vnode = parentVnode // update vm's placeholder node without re-render
 
   if (vm._vnode) { // update child tree's parent

@@ -684,6 +684,7 @@ function genSlot (el: ASTElement, state: CodegenState): string {
 // componentName is el.component, take it as argument to shun flow's pessimistic refinement
 /**
  * 生成指令，格式：'_c(组件名,_b({...}), 子组件)'
+ * _c在Vue实例中是调用createElement函数创建虚拟节点的
  * @param {string} componentName 组件名
  * @param {ASTElement} el ASTElement节点
  * @param {CodegenState} state render函数生成状态

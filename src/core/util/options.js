@@ -474,7 +474,7 @@ export function mergeOptions (
 }
 
 /**
- * 访问options[type][id]的值，包括id的驼峰格式和首字母大写格式
+ * 获取options[type][id]的值，包括id的驼峰格式和首字母大写格式
  * Resolve an asset.
  * This function is used because child instances need access
  * to assets defined in its ancestor chain.

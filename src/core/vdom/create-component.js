@@ -98,6 +98,14 @@ const componentVNodeHooks = {
 
 const hooksToMerge = Object.keys(componentVNodeHooks)
 
+/**
+ * 创建组件的占位虚拟节点
+ * @param {Class<Component> | Function | Object | void} Ctor 组件的构造函数或配置对象
+ * @param {VNodeData} data 组件在父组件内的对应的虚拟节点的数据对象
+ * @param {Component} context 组件在父组件内的对应的虚拟节点的渲染上下文
+ * @param {Array<VNode>} children 子节点，即插槽内容
+ * @param {string} tag 组件在父组件内的对应的节点的标签名
+ */
 export function createComponent (
   Ctor: Class<Component> | Function | Object | void,
   data: ?VNodeData,
@@ -109,10 +117,10 @@ export function createComponent (
     return
   }
 
-  const baseCtor = context.$options._base
+  const baseCtor = context.$options._base // 上下文的构造函数，即组件的父组件的构造函数
 
   // plain options object: turn it into a constructor
-  if (isObject(Ctor)) {
+  if (isObject(Ctor)) { // Ctor为组件的配置对象，则创建父组件构造函数的子类构造器
     Ctor = baseCtor.extend(Ctor)
   }
 
@@ -126,14 +134,16 @@ export function createComponent (
   }
 
   // async component
+  // 异步组件
   let asyncFactory
-  if (isUndef(Ctor.cid)) {
+  if (isUndef(Ctor.cid)) { // 类ID未定义，即Ctor不是构造函数，而是构造函数的工厂函数
     asyncFactory = Ctor
-    Ctor = resolveAsyncComponent(asyncFactory, baseCtor)
+    Ctor = resolveAsyncComponent(asyncFactory, baseCtor) // 处理异步工厂函数
     if (Ctor === undefined) {
       // return a placeholder node for async component, which is rendered
       // as a comment node but preserves all the raw information for the node.
       // the information will be used for async server-rendering and hydration.
+      // 创建空的占位虚拟节点
       return createAsyncPlaceholder(
         asyncFactory,
         data,
@@ -148,19 +158,20 @@ export function createComponent (
 
   // resolve constructor options in case global mixins are applied after
   // component constructor creation
+  // 根据Ctor的父类（如果有）的全局配置，更新并获取全局配置
   resolveConstructorOptions(Ctor)
 
   // transform component v-model data into props & events
-  if (isDef(data.model)) {
-    transformModel(Ctor.options, data)
+  if (isDef(data.model)) { // 组件在父组件中的节点存在v-model
+    transformModel(Ctor.options, data) // 转化v-model
   }
 
   // extract props
-  const propsData = extractPropsFromVNodeData(data, Ctor, tag)
+  const propsData = extractPropsFromVNodeData(data, Ctor, tag) // 获取组件的属性的绑定对象
 
   // functional component
-  if (isTrue(Ctor.options.functional)) {
-    return createFunctionalComponent(Ctor, propsData, data, context, children)
+  if (isTrue(Ctor.options.functional)) { // 函数式组件
+    return createFunctionalComponent(Ctor, propsData, data, context, children) // 创建函数式组件实例，返回渲染后的虚拟节点树
   }
 
   // extract listeners, since these needs to be treated as
@@ -168,7 +179,7 @@ export function createComponent (
   const listeners = data.on
   // replace with listeners with .native modifier
   // so it gets processed during parent component patch.
-  data.on = data.nativeOn
+  data.on = data.nativeOn // TODO：为什么？
 
   if (isTrue(Ctor.options.abstract)) {
     // abstract components do not keep anything
@@ -183,11 +194,12 @@ export function createComponent (
   }
 
   // install component management hooks onto the placeholder node
+  // 合并组件的钩子
   installComponentHooks(data)
 
   // return a placeholder vnode
   const name = Ctor.options.name || tag
-  const vnode = new VNode(
+  const vnode = new VNode( // 创建组件的占位节点
     `vue-component-${Ctor.cid}${name ? `-${name}` : ''}`,
     data, undefined, undefined, undefined, context,
     { Ctor, propsData, listeners, tag, children },
@@ -223,9 +235,13 @@ export function createComponentInstanceForVnode (
   return new vnode.componentOptions.Ctor(options)
 }
 
+/**
+ * 合并组件的钩子
+ * @param {VNodeData} data 虚拟节点的数据对象
+ */
 function installComponentHooks (data: VNodeData) {
-  const hooks = data.hook || (data.hook = {})
-  for (let i = 0; i < hooksToMerge.length; i++) {
+  const hooks = data.hook || (data.hook = {}) // 自定义钩子
+  for (let i = 0; i < hooksToMerge.length; i++) { // 遍历默认钩子
     const key = hooksToMerge[i]
     const existing = hooks[key]
     const toMerge = componentVNodeHooks[key]
@@ -247,22 +263,27 @@ function mergeHook (f1: any, f2: any): Function {
 
 // transform component v-model info (value and callback) into
 // prop and event handler respectively.
+/**
+ * 转化组件在父组件中的节点的v-model为属性绑定和事件监听
+ * @param {ComponentOptions} options 组件配置对象
+ * @param {any} data 组件在父组件中对应的虚拟节点的数据对象
+ */
 function transformModel (options, data: any) {
-  const prop = (options.model && options.model.prop) || 'value'
-  const event = (options.model && options.model.event) || 'input'
-  ;(data.attrs || (data.attrs = {}))[prop] = data.model.value
+  const prop = (options.model && options.model.prop) || 'value' // 取配置对象中针对v-model转化的属性名，默认为value
+  const event = (options.model && options.model.event) || 'input' // 取配置对象中针对v-model转化的事件名，默认为input
+  ;(data.attrs || (data.attrs = {}))[prop] = data.model.value // 这个应该是v-model绑定的数据对象中的某个属性 TODO：不确定model.value是啥
   const on = data.on || (data.on = {})
-  const existing = on[event]
-  const callback = data.model.callback
+  const existing = on[event] // 虚拟节点存在该事件监听
+  const callback = data.model.callback // 这个应该是对v-model绑定的数据对象中的某个属性赋值的回调 TODO：不确定model.callback是啥
   if (isDef(existing)) {
     if (
       Array.isArray(existing)
         ? existing.indexOf(callback) === -1
         : existing !== callback
-    ) {
-      on[event] = [callback].concat(existing)
+    ) { // callback不在v-model对应的事件监听队列中
+      on[event] = [callback].concat(existing) // 添加v-model对应的事件监听
     }
   } else {
-    on[event] = callback
+    on[event] = callback // 添加v-model对应的事件监听
   }
 }

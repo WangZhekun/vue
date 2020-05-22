@@ -23,16 +23,16 @@ declare interface Component {
   $el: any; // so that we can attach __vue__ to it
   $data: Object;
   $props: Object;
-  $options: ComponentOptions;
-  $parent: Component | void;
-  $root: Component;
-  $children: Array<Component>;
-  $refs: { [key: string]: Component | Element | Array<Component | Element> | void };
-  $slots: { [key: string]: Array<VNode> };
-  $scopedSlots: { [key: string]: () => VNodeChildren };
-  $vnode: VNode; // the placeholder node for the component in parent's render tree
+  $options: ComponentOptions; // Vue实例的完整配置项
+  $parent: Component | void; // 父实例
+  $root: Component; // 根Vue实例
+  $children: Array<Component>; // 子实例列表
+  $refs: { [key: string]: Component | Element | Array<Component | Element> | void }; // 引用
+  $slots: { [key: string]: Array<VNode> }; // 插槽名到vnode列表（插槽内容）的映射
+  $scopedSlots: { [key: string]: () => VNodeChildren }; // 标准化后的插槽内容。插槽名到可以获得插槽内容的虚拟节点列表的函数的映射
+  $vnode: VNode; // 组件在父实例中的虚拟节点 the placeholder node for the component in parent's render tree
   $attrs: { [key: string] : string };
-  $listeners: { [key: string]: Function | Array<Function> };
+  $listeners: { [key: string]: Function | Array<Function> }; // 组件在父组件中的虚拟节点的事件监听
   $isServer: boolean;
 
   // public methods
@@ -42,26 +42,26 @@ declare interface Component {
   $set: <T>(target: Object | Array<T>, key: string | number, val: T) => T;
   $delete: <T>(target: Object | Array<T>, key: string | number) => void;
   $watch: (expOrFn: string | Function, cb: Function, options?: Object) => Function;
-  $on: (event: string | Array<string>, fn: Function) => Component;
-  $once: (event: string, fn: Function) => Component;
-  $off: (event?: string | Array<string>, fn?: Function) => Component;
-  $emit: (event: string, ...args: Array<mixed>) => Component;
-  $nextTick: (fn: Function) => void | Promise<*>;
+  $on: (event: string | Array<string>, fn: Function) => Component; // 新增事件监听
+  $once: (event: string, fn: Function) => Component; // 新增一次性事件监听
+  $off: (event?: string | Array<string>, fn?: Function) => Component; // 取消事件监听
+  $emit: (event: string, ...args: Array<mixed>) => Component; // 触发事件
+  $nextTick: (fn: Function) => void | Promise<*>; // 注册时间片（下次 DOM 更新循环）结束的回调
   $createElement: (tag?: string | Component, data?: Object, children?: VNodeChildren) => VNode;
 
   // private properties
-  _uid: number | string;
+  _uid: number | string; // 实例编号
   _name: string; // this only exists in dev mode
-  _isVue: true;
+  _isVue: true; // Vue实例标志
   _self: Component;
   _renderProxy: Component;
   _renderContext: ?Component;
-  _watcher: Watcher;
-  _watchers: Array<Watcher>;
+  _watcher: Watcher; // 组件模板对应的Watcher实例
+  _watchers: Array<Watcher>; // 组件实例的所有Watcher实例，包括_watcher
   _computedWatchers: { [key: string]: Watcher };
   _data: Object;
   _props: Object;
-  _events: Object;
+  _events: Object; // 事件名到事件处理方法集合的映射
   _inactive: boolean | null;
   _directInactive: boolean;
   _isMounted: boolean;
@@ -69,14 +69,14 @@ declare interface Component {
   _isBeingDestroyed: boolean;
   _vnode: ?VNode; // self root node
   _staticTrees: ?Array<VNode>; // v-once cached trees
-  _hasHookEvent: boolean;
+  _hasHookEvent: boolean; // 组件被监听的事件中包含以hook:开头的事件
   _provided: ?Object;
   // _virtualComponents?: { [key: string]: Component };
 
   // private methods
 
   // lifecycle
-  _init: Function;
+  _init: Function; // 实例初始化方法
   _mount: (el?: Element | void, hydrating?: boolean) => Component;
   _update: (vnode: VNode, hydrating?: boolean) => void;
 
@@ -100,7 +100,7 @@ declare interface Component {
     data?: VNodeData,
     children?: VNodeChildren,
     normalizationType?: number
-  ) => VNode | void;
+  ) => VNode | void; // 实例的createElement方法
 
   // renderStatic
   _m: (index: number, isInFor?: boolean) => VNode | VNodeChildren;

@@ -18,38 +18,45 @@ type PropOptions = {
   validator: ?Function
 };
 
+/**
+ * 获取处理过的属性值，监听和默认值等
+ * @param {string} key 组件的属性名
+ * @param {Object} propOptions 组件的属性定义对象
+ * @param {Object} propsData 组件的属性绑定对象
+ * @param {Component} vm
+ */
 export function validateProp (
   key: string,
   propOptions: Object,
   propsData: Object,
   vm?: Component
 ): any {
-  const prop = propOptions[key]
-  const absent = !hasOwn(propsData, key)
+  const prop = propOptions[key] // 属性定义对象
+  const absent = !hasOwn(propsData, key) // 属性没有值的标记
   let value = propsData[key]
   // boolean casting
-  const booleanIndex = getTypeIndex(Boolean, prop.type)
+  const booleanIndex = getTypeIndex(Boolean, prop.type) // 获取Boolean在属性定义的类型中的索引
   if (booleanIndex > -1) {
-    if (absent && !hasOwn(prop, 'default')) {
-      value = false
-    } else if (value === '' || value === hyphenate(key)) {
+    if (absent && !hasOwn(prop, 'default')) { // 属性没有值，且没有默认值配置
+      value = false // 设置属性的默认值
+    } else if (value === '' || value === hyphenate(key)) { // 属性置为空字符串，或属性名的“-”格式
       // only cast empty string / same name to boolean if
       // boolean has higher priority
       const stringIndex = getTypeIndex(String, prop.type)
-      if (stringIndex < 0 || booleanIndex < stringIndex) {
-        value = true
+      if (stringIndex < 0 || booleanIndex < stringIndex) { // 属性类型定义没有字符串，或布尔值类型比字符串类型优先
+        value = true // 设置属性的默认值
       }
     }
   }
   // check default value
   if (value === undefined) {
-    value = getPropDefaultValue(vm, prop, key)
+    value = getPropDefaultValue(vm, prop, key) // 获取属性的默认值
     // since the default value is a fresh copy,
     // make sure to observe it.
-    const prevShouldObserve = shouldObserve
+    const prevShouldObserve = shouldObserve // 缓存全局是否可监听
     toggleObserving(true)
-    observe(value)
-    toggleObserving(prevShouldObserve)
+    observe(value) // 响应式监听
+    toggleObserving(prevShouldObserve) // 恢复全局是否可见听
   }
   if (
     process.env.NODE_ENV !== 'production' &&
@@ -62,7 +69,11 @@ export function validateProp (
 }
 
 /**
+ * 获取属性的默认值
  * Get the default value of a prop.
+ * @param {Component} vm
+ * @param {PropOptions} prop 属性定义对象
+ * @param {string} key 属性名
  */
 function getPropDefaultValue (vm: ?Component, prop: PropOptions, key: string): any {
   // no default, return undefined
@@ -188,6 +199,11 @@ function isSameType (a, b) {
   return getType(a) === getType(b)
 }
 
+/**
+ * 获取目标类型在定义类型内的索引
+ * @param {any} type 目标类型
+ * @param {any} expectedTypes 定义类型
+ */
 function getTypeIndex (type, expectedTypes): number {
   if (!Array.isArray(expectedTypes)) {
     return isSameType(expectedTypes, type) ? 0 : -1

@@ -6,10 +6,9 @@ import { FunctionalRenderContext } from 'core/vdom/create-functional-component'
 // 初始化Vue的全局属性，即“Vue.xxx”Vue对象本身的属性
 initGlobalAPI(Vue)
 
-// 定义Vue实例的原型的$isServer属性
-// $isServer属性的作用是什么？？？
+// 定义Vue实例的原型的$isServer只读属性
 Object.defineProperty(Vue.prototype, '$isServer', {
-  get: isServerRendering
+  get: isServerRendering // 是否在服务端
 })
 
 // 定义Vue实例的原型的$ssrContext属性
