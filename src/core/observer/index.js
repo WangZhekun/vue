@@ -129,7 +129,7 @@ function copyAugment (target: Object, src: Object, keys: Array<string>) {
  * returns the new observer if successfully observed,
  * or the existing observer if the value already has one.
  * @param {any} value 待监听值
- * @param {boolean} asRootData
+ * @param {boolean} asRootData Vue实例的根响应式数据标志
  */
 export function observe (value: any, asRootData: ?boolean): Observer | void {
   if (!isObject(value) || value instanceof VNode) { // 非对象，是VNode的实例

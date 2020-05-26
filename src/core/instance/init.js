@@ -12,9 +12,13 @@ import { extend, mergeOptions, formatComponentName } from '../util/index'
 
 let uid = 0
 
+/**
+ * 定义Vue原型的_init API
+ * @param {Class<Component>} Vue Vue类
+ */
 export function initMixin (Vue: Class<Component>) {
   /**
-   *
+   * Vue实例初始化方法
    * @param {Object} options Vue实例创建的配置项
    */
   Vue.prototype._init = function (options?: Object) {
@@ -58,11 +62,11 @@ export function initMixin (Vue: Class<Component>) {
     initLifecycle(vm) // 初始化Vue实例的生命周期相关的属性
     initEvents(vm) // 初始化组件的事件监听
     initRender(vm) // 初始化渲染相关的属性
-    callHook(vm, 'beforeCreate')
+    callHook(vm, 'beforeCreate') // 执行beforeCreate钩子
     initInjections(vm) // 初始化vm注入的内容 resolve injections before data/props
-    initState(vm)
-    initProvide(vm) // resolve provide after data/props
-    callHook(vm, 'created')
+    initState(vm) // 初始化数据、属性、计算属性、watch、方法
+    initProvide(vm) // 初始化provide，在响应式数据对象和属性初始化之后初始化，因为可能在provide的属性会依赖响应式数据对象和属性。resolve provide after data/props
+    callHook(vm, 'created') // 执行created钩子
 
     /* istanbul ignore if */
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
@@ -71,8 +75,8 @@ export function initMixin (Vue: Class<Component>) {
       measure(`vue ${vm._name} init`, startTag, endTag)
     }
 
-    if (vm.$options.el) {
-      vm.$mount(vm.$options.el)
+    if (vm.$options.el) { // 如果Vue实例的配置对象中有el
+      vm.$mount(vm.$options.el) // 挂载Vue实例
     }
   }
 }

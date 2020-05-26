@@ -48,7 +48,7 @@ export default class Watcher {
   /**
    * 侦听者的构造方法
    * @param {Component} vm Vue实例
-   * @param {string | Function} expOrFn
+   * @param {string | Function} expOrFn 需要监听的表达式，或工厂函数
    * @param {Function} cb
    * @param {Object} options 配置项
    * @param {boolean} isRenderWatcher

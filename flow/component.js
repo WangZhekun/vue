@@ -20,9 +20,9 @@ declare interface Component {
   static FunctionalRenderContext: Function;
 
   // public properties
-  $el: any; // so that we can attach __vue__ to it
-  $data: Object;
-  $props: Object;
+  $el: any; // 挂载点 so that we can attach __vue__ to it
+  $data: Object; // _data的代理，只读
+  $props: Object; // _props的代理，只读
   $options: ComponentOptions; // Vue实例的完整配置项
   $parent: Component | void; // 父实例
   $root: Component; // 根Vue实例
@@ -31,9 +31,9 @@ declare interface Component {
   $slots: { [key: string]: Array<VNode> }; // 插槽名到vnode列表（插槽内容）的映射
   $scopedSlots: { [key: string]: () => VNodeChildren }; // 标准化后的插槽内容。插槽名到可以获得插槽内容的虚拟节点列表的函数的映射
   $vnode: VNode; // 组件在父实例中的虚拟节点 the placeholder node for the component in parent's render tree
-  $attrs: { [key: string] : string };
+  $attrs: { [key: string] : string }; // 组件在父组件中的节点的特性集合，浅响应式
   $listeners: { [key: string]: Function | Array<Function> }; // 组件在父组件中的虚拟节点的事件监听
-  $isServer: boolean;
+  $isServer: boolean; // 是否在服务端，只读
 
   // public methods
   $mount: (el?: Element | string, hydrating?: boolean) => Component;
@@ -58,9 +58,9 @@ declare interface Component {
   _renderContext: ?Component;
   _watcher: Watcher; // 组件模板对应的Watcher实例
   _watchers: Array<Watcher>; // 组件实例的所有Watcher实例，包括_watcher
-  _computedWatchers: { [key: string]: Watcher };
-  _data: Object;
-  _props: Object;
+  _computedWatchers: { [key: string]: Watcher }; // 计算属性的属性名到对应的Watcher实例的映射
+  _data: Object; // 响应式数据对象
+  _props: Object; // 属性对象
   _events: Object; // 事件名到事件处理方法集合的映射
   _inactive: boolean | null;
   _directInactive: boolean;
