@@ -2,22 +2,26 @@
 
 import { isDef, isObject } from 'shared/util'
 
+/**
+ * 生成虚拟节点的class，合并成字符串的class
+ * @param {VNodeWithData} vnode 虚拟节点
+ */
 export function genClassForVnode (vnode: VNodeWithData): string {
   let data = vnode.data
   let parentNode = vnode
   let childNode = vnode
-  while (isDef(childNode.componentInstance)) {
+  while (isDef(childNode.componentInstance)) { // 向下遍历所有的子组件作为父组件根节点的虚拟节点
     childNode = childNode.componentInstance._vnode
     if (childNode && childNode.data) {
-      data = mergeClassData(childNode.data, data)
+      data = mergeClassData(childNode.data, data) // 合并class和staticClass
     }
   }
-  while (isDef(parentNode = parentNode.parent)) {
+  while (isDef(parentNode = parentNode.parent)) { // 向上遍历所有子组件作为父组件跟节点的虚拟节点
     if (parentNode && parentNode.data) {
-      data = mergeClassData(data, parentNode.data)
+      data = mergeClassData(data, parentNode.data) // 合并class和staticClass
     }
   }
-  return renderClass(data.staticClass, data.class)
+  return renderClass(data.staticClass, data.class) // 生成class列表
 }
 
 function mergeClassData (child: VNodeData, parent: VNodeData): {

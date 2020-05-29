@@ -65,9 +65,9 @@ declare interface Component {
   _inactive: boolean | null;
   _directInactive: boolean;
   _isMounted: boolean;
-  _isDestroyed: boolean;
-  _isBeingDestroyed: boolean;
-  _vnode: ?VNode; // self root node
+  _isDestroyed: boolean; // 销毁完毕
+  _isBeingDestroyed: boolean; // 已经开始执行销毁操作
+  _vnode: ?VNode; // 该组件的虚拟节点树，self root node
   _staticTrees: ?Array<VNode>; // v-once cached trees
   _hasHookEvent: boolean; // 组件被监听的事件中包含以hook:开头的事件
   _provided: ?Object;

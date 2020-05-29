@@ -2,15 +2,15 @@
 
 export default class VNode {
   tag: string | void;
-  data: VNodeData | void;
+  data: VNodeData | void; // 虚拟节点的配置数据对象
   children: ?Array<VNode>; // 子节点
   text: string | void;
-  elm: Node | void;
+  elm: Node | void; // 虚拟节点渲染出的节点树
   ns: string | void;
   context: Component | void; // 当前虚拟节点渲染的上下文（Vue实例） rendered in this component's scope
   key: string | number | void;
   componentOptions: VNodeComponentOptions | void;
-  componentInstance: Component | void; // component instance
+  componentInstance: Component | void; // 虚拟节点对应的组件实例（不是虚拟节点所在的组件的实例），component instance
   parent: VNode | void; // component placeholder node 组件在父实例中的虚拟节点
 
   // strictly internal
@@ -22,7 +22,7 @@ export default class VNode {
   isOnce: boolean; // is a v-once node?
   asyncFactory: Function | void; // async component factory function
   asyncMeta: Object | void;
-  isAsyncPlaceholder: boolean;
+  isAsyncPlaceholder: boolean; // 异步占位节点，即是注释节点，且有异步组件工厂函数
   ssrContext: Object | void;
   fnContext: Component | void; // real context vm for functional nodes
   fnOptions: ?ComponentOptions; // for SSR caching
@@ -101,6 +101,10 @@ export function createTextVNode (val: string | number) {
 // used for static nodes and slot nodes because they may be reused across
 // multiple renders, cloning them avoids errors when DOM manipulations rely
 // on their elm reference.
+/**
+ * 复制虚拟节点，不做深复制
+ * @param {VNode} vnode 待复制虚拟节点
+ */
 export function cloneVNode (vnode: VNode): VNode {
   const cloned = new VNode(
     vnode.tag,

@@ -22,6 +22,7 @@ function Vue (options) {
   this._init(options)
 }
 
+// 定义各种Vue的原型方法
 initMixin(Vue) // 定义_init方法
 stateMixin(Vue) // 定义状态相关属性和方法：$data、$props、$set、$delete、$watch
 eventsMixin(Vue) // 定义事件相关方法：$on、$once、$off、$emit

@@ -47,6 +47,10 @@ export const isBooleanAttr = makeMap(
 
 export const xlinkNS = 'http://www.w3.org/1999/xlink'
 
+/**
+ * 是否以xlink:开头
+ * @param {string} name 待检测字符串
+ */
 export const isXlink = (name: string): boolean => {
   return name.charAt(5) === ':' && name.slice(0, 5) === 'xlink'
 }

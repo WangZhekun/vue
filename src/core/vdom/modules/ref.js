@@ -4,16 +4,16 @@ import { remove, isDef } from 'shared/util'
 
 export default {
   create (_: any, vnode: VNodeWithData) {
-    registerRef(vnode)
+    registerRef(vnode) // 注册引用
   },
   update (oldVnode: VNodeWithData, vnode: VNodeWithData) {
-    if (oldVnode.data.ref !== vnode.data.ref) {
-      registerRef(oldVnode, true)
-      registerRef(vnode)
+    if (oldVnode.data.ref !== vnode.data.ref) { // 新旧虚拟节点的引用名称发生变化
+      registerRef(oldVnode, true) // 删除旧虚拟节点的引用
+      registerRef(vnode) // 注册新虚拟节点的引用
     }
   },
   destroy (vnode: VNodeWithData) {
-    registerRef(vnode, true)
+    registerRef(vnode, true) // 删除引用
   }
 }
 

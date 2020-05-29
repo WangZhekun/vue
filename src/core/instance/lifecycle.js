@@ -18,9 +18,13 @@ import {
   invokeWithErrorHandling
 } from '../util/index'
 
-export let activeInstance: any = null
+export let activeInstance: any = null // 正在激活的Vue实例
 export let isUpdatingChildComponent: boolean = false
 
+/**
+ * 设置正在激活的Vue实例
+ * @param {Component} vm Vue实例
+ */
 export function setActiveInstance(vm: Component) {
   const prevActiveInstance = activeInstance
   activeInstance = vm
@@ -38,7 +42,7 @@ export function initLifecycle (vm: Component) {
 
   // locate first non-abstract parent
   let parent = options.parent // 父Vue实例
-  if (parent && !options.abstract) { // 将当前实例添加到父实例的$children中。TODO：abstract干什么的？
+  if (parent && !options.abstract) { // 将当前实例添加到父实例的$children中。父实例为祖上第一个非抽象组件（abstract属性）。TODO：抽象组件？比如KeepAlive组件？
     while (parent.$options.abstract && parent.$parent) {
       parent = parent.$parent
     }
@@ -65,88 +69,94 @@ export function initLifecycle (vm: Component) {
  */
 export function lifecycleMixin (Vue: Class<Component>) {
   /**
-   *
+   * 更新虚拟节点树，并重新渲染
    * @param {VNode} vnode 虚拟节点树
    * @param {boolean} hydrating 是否将DOM节点与vnode关联
    */
   Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
     const vm: Component = this // Vue实例
-    const prevEl = vm.$el
-    const prevVnode = vm._vnode
-    const restoreActiveInstance = setActiveInstance(vm)
+    const prevEl = vm.$el // 挂载点
+    const prevVnode = vm._vnode // 虚拟节点树
+    const restoreActiveInstance = setActiveInstance(vm) // 设置正在激活的Vue实例为当前实例
     vm._vnode = vnode
     // Vue.prototype.__patch__ is injected in entry points
     // based on the rendering backend used.
-    if (!prevVnode) {
+    if (!prevVnode) { // 无虚拟节点树
       // initial render
-      vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */) // 创建VNode树
+      vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */) // 创建VNode树 - 第一次渲染
     } else {
       // updates
-      vm.$el = vm.__patch__(prevVnode, vnode) // 创建VNode树
+      vm.$el = vm.__patch__(prevVnode, vnode) // 创建VNode树 - 更新渲染
     }
-    restoreActiveInstance()
+    restoreActiveInstance() // 恢复正在激活的Vue实例
     // update __vue__ reference
-    if (prevEl) {
+    if (prevEl) { // 清空原渲染结果的Vue实例引用
       prevEl.__vue__ = null
     }
-    if (vm.$el) {
+    if (vm.$el) { // 置渲染结果的Vue实例引用
       vm.$el.__vue__ = vm
     }
     // if parent is an HOC, update its $el as well
-    if (vm.$vnode && vm.$parent && vm.$vnode === vm.$parent._vnode) {
+    if (vm.$vnode && vm.$parent && vm.$vnode === vm.$parent._vnode) { // 当前Vue实例的虚拟节点树与父实例的一样，则渲染结果也要一样
       vm.$parent.$el = vm.$el
     }
     // updated hook is called by the scheduler to ensure that children are
     // updated in a parent's updated hook.
   }
 
+  /**
+   * 强制更新。通过当前Vue实例的组件模板对应的Watcher实例的update方法，通知Watcher实例更新。
+   */
   Vue.prototype.$forceUpdate = function () {
     const vm: Component = this
-    if (vm._watcher) {
+    if (vm._watcher) { // 当前Vue实例的组件模板对应的Watcher实例存在
       vm._watcher.update()
     }
   }
 
+  /**
+   * 销毁Vue实例
+   */
   Vue.prototype.$destroy = function () {
     const vm: Component = this
-    if (vm._isBeingDestroyed) {
+    if (vm._isBeingDestroyed) { // 已经开始执行销毁操作
       return
     }
-    callHook(vm, 'beforeDestroy')
-    vm._isBeingDestroyed = true
+    callHook(vm, 'beforeDestroy') // 执行beforeDestroy钩子
+    vm._isBeingDestroyed = true // 置销毁操作标志为true
     // remove self from parent
     const parent = vm.$parent
-    if (parent && !parent._isBeingDestroyed && !vm.$options.abstract) {
-      remove(parent.$children, vm)
+    if (parent && !parent._isBeingDestroyed && !vm.$options.abstract) { // 存在父实例，且父实例不是在销毁中，且当前Vue实例不是抽象组件 TODO：抽象组件是干什么的
+      remove(parent.$children, vm) // 将当前Vue实例，从其父实例的children列表中移除
     }
     // teardown watchers
     if (vm._watcher) {
-      vm._watcher.teardown()
+      vm._watcher.teardown() // 将主Watcher实例从Dep实例的订阅者列表中移除，从Vue实例的watcher列表中移除
     }
     let i = vm._watchers.length
     while (i--) {
-      vm._watchers[i].teardown()
+      vm._watchers[i].teardown() // 依次将Watcher实例从Dep实例的订阅者列表中移除，从Vue实例的Watcher列表中移除
     }
     // remove reference from data ob
     // frozen object may not have observer.
-    if (vm._data.__ob__) {
-      vm._data.__ob__.vmCount--
+    if (vm._data.__ob__) { // 如果响应式数据对象中有Observer实例
+      vm._data.__ob__.vmCount-- // 将Observer实例监听的响应式数据对象作为根数据对象的计数器减一
     }
     // call the last hook...
-    vm._isDestroyed = true
+    vm._isDestroyed = true // 销毁完成
     // invoke destroy hooks on current rendered tree
-    vm.__patch__(vm._vnode, null)
+    vm.__patch__(vm._vnode, null) // 删除虚拟节点树
     // fire destroyed hook
-    callHook(vm, 'destroyed')
+    callHook(vm, 'destroyed') // 执行destroyed钩子
     // turn off all instance listeners.
-    vm.$off()
+    vm.$off() // 清空事件监听
     // remove __vue__ reference
     if (vm.$el) {
-      vm.$el.__vue__ = null
+      vm.$el.__vue__ = null // 移除渲染结果的Vue实例引用
     }
     // release circular reference (#6759)
     if (vm.$vnode) {
-      vm.$vnode.parent = null
+      vm.$vnode.parent = null // 释放虚拟节点树对父节点的引用
     }
   }
 }

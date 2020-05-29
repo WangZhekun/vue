@@ -65,15 +65,15 @@ declare interface VNodeData {
   };
 };
 
-declare type VNodeDirective = {
-  name: string;
+declare type VNodeDirective = { // 虚拟节点的数据对象中的directives配置（是个数组）的元素的类型
+  name: string; // 指令名称
   rawName: string;
-  value?: any;
-  oldValue?: any;
-  arg?: string;
-  oldArg?: string;
-  modifiers?: ASTModifiers;
-  def?: Object;
+  value?: any; // 指令表达式的值
+  oldValue?: any; // 旧指令表达式的值
+  arg?: string; // 指令参数，如：v-demo:foo.a.b 指令中的foo
+  oldArg?: string; // 旧指令参数
+  modifiers?: ASTModifiers; // 修饰符，如：v-demo:foo.a.b 指令中的a和b，表示为{a:true, b:true}
+  def?: Object; // 指令的定义对象
 };
 
 declare type ScopedSlotsData = Array<{ key: string, fn: Function } | ScopedSlotsData>;
