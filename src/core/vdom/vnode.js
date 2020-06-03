@@ -1,7 +1,7 @@
 /* @flow */
 
 export default class VNode {
-  tag: string | void;
+  tag: string | void; // 标签名
   data: VNodeData | void; // 虚拟节点的配置数据对象
   children: ?Array<VNode>; // 子节点
   text: string | void;
@@ -9,8 +9,8 @@ export default class VNode {
   ns: string | void;
   context: Component | void; // 当前虚拟节点渲染的上下文（Vue实例） rendered in this component's scope
   key: string | number | void;
-  componentOptions: VNodeComponentOptions | void;
-  componentInstance: Component | void; // 虚拟节点对应的组件实例（不是虚拟节点所在的组件的实例），component instance
+  componentOptions: VNodeComponentOptions | void; // 虚拟节点（占位节点）的对应组件的配置项， { Ctor 组件构造器, propsData 属性绑定对象, listeners 事件监听, tag 占位节点名称, children 占位节点的子节点 }
+  componentInstance: Component | void; // 虚拟节点对应的组件实例（占位节点，不是虚拟节点所在的组件的实例），component instance
   parent: VNode | void; // component placeholder node 组件在父实例中的虚拟节点
 
   // strictly internal

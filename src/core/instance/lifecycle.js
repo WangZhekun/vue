@@ -42,7 +42,7 @@ export function initLifecycle (vm: Component) {
 
   // locate first non-abstract parent
   let parent = options.parent // 父Vue实例
-  if (parent && !options.abstract) { // 将当前实例添加到父实例的$children中。父实例为祖上第一个非抽象组件（abstract属性）。TODO：抽象组件？比如KeepAlive组件？
+  if (parent && !options.abstract) { // 将当前实例添加到父实例的$children中。父实例为祖上第一个非抽象组件（abstract属性，keep-alive就是抽象组件，不渲染DOM，也不会出现在父组件链中）。
     while (parent.$options.abstract && parent.$parent) {
       parent = parent.$parent
     }
@@ -126,7 +126,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
     vm._isBeingDestroyed = true // 置销毁操作标志为true
     // remove self from parent
     const parent = vm.$parent
-    if (parent && !parent._isBeingDestroyed && !vm.$options.abstract) { // 存在父实例，且父实例不是在销毁中，且当前Vue实例不是抽象组件 TODO：抽象组件是干什么的
+    if (parent && !parent._isBeingDestroyed && !vm.$options.abstract) { // 存在父实例，且父实例不是在销毁中，且当前Vue实例不是抽象组件（keep-alive是抽象组件，不渲染DOM，也不会出现在父组件链中）
       remove(parent.$children, vm) // 将当前Vue实例，从其父实例的children列表中移除
     }
     // teardown watchers

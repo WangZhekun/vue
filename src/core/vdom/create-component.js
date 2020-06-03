@@ -181,7 +181,7 @@ export function createComponent (
   // so it gets processed during parent component patch.
   data.on = data.nativeOn // TODO：为什么？
 
-  if (isTrue(Ctor.options.abstract)) {
+  if (isTrue(Ctor.options.abstract)) { // 抽象组件（如keep-alive，不渲染DOM，也不会出现在父组件链中）
     // abstract components do not keep anything
     // other than props & listeners & slot
 
