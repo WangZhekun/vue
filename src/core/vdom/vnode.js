@@ -4,9 +4,9 @@ export default class VNode {
   tag: string | void; // 标签名
   data: VNodeData | void; // 虚拟节点的配置数据对象
   children: ?Array<VNode>; // 子节点
-  text: string | void;
+  text: string | void; // 该虚拟节点为文本节点，该属性为文本内容
   elm: Node | void; // 虚拟节点渲染出的节点树
-  ns: string | void;
+  ns: string | void; // 命名空间
   context: Component | void; // 当前虚拟节点渲染的上下文（Vue实例） rendered in this component's scope
   key: string | number | void;
   componentOptions: VNodeComponentOptions | void; // 虚拟节点（占位节点）的对应组件的配置项， { Ctor 组件构造器, propsData 属性绑定对象, listeners 事件监听, tag 占位节点名称, children 占位节点的子节点 }
@@ -17,10 +17,10 @@ export default class VNode {
   raw: boolean; // contains raw HTML? (server only)
   isStatic: boolean; // hoisted static node
   isRootInsert: boolean; // 虚拟节点是组件根节点的标志，是进入过渡状态的判断依据。necessary for enter transition check
-  isComment: boolean; // empty comment placeholder?
-  isCloned: boolean; // is a cloned node?
-  isOnce: boolean; // is a v-once node?
-  asyncFactory: Function | void; // async component factory function
+  isComment: boolean; // 是注释节点 empty comment placeholder?
+  isCloned: boolean; // 是复制的节点 is a cloned node?
+  isOnce: boolean; // 是v-once节点，即一次性渲染节点 is a v-once node?
+  asyncFactory: Function | void; // 异步组件构造函数的工厂函数 async component factory function
   asyncMeta: Object | void;
   isAsyncPlaceholder: boolean; // 异步占位节点，即是注释节点，且有异步组件工厂函数
   ssrContext: Object | void;
@@ -34,11 +34,11 @@ export default class VNode {
    * @param {string} tag 标签名
    * @param {VNodeData} data 虚拟节点的配置数据对象
    * @param {Array<VNode>} children 子节点
-   * @param {string} text
-   * @param {Node} elm
+   * @param {string} text 文本
+   * @param {Node} elm 虚拟节点渲染出的节点树
    * @param {Component} context 虚拟节点的渲染上下文（Vue实例）
-   * @param {VNodeComponentOptions} componentOptions
-   * @param {Function} asyncFactory
+   * @param {VNodeComponentOptions} componentOptions 虚拟节点（占位节点）的对应组件的配置项
+   * @param {Function} asyncFactory 异步组件构造函数的工厂函数
    */
   constructor (
     tag?: string,

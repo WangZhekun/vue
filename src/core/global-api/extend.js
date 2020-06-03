@@ -78,7 +78,7 @@ export function initExtend (Vue: GlobalAPI) {
     // keep a reference to the super options at extension time.
     // later at instantiation we can check if Super's options have
     // been updated.
-    Sub.superOptions = Super.options // 父类的全局配置
+    Sub.superOptions = Super.options // 父类的配置对象
     Sub.extendOptions = extendOptions // 子类的扩展配置
     Sub.sealedOptions = extend({}, Sub.options) // 子类的全局配置备份
 
