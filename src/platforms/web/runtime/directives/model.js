@@ -34,8 +34,8 @@ const directive = {
     } else if (vnode.tag === 'textarea' || isTextInputType(el.type)) {
       el._vModifiers = binding.modifiers
       if (!binding.modifiers.lazy) {
-        el.addEventListener('compositionstart', onCompositionStart)
-        el.addEventListener('compositionend', onCompositionEnd)
+        el.addEventListener('compositionstart', onCompositionStart) // 复合事件开始监听，如汉字输入起始
+        el.addEventListener('compositionend', onCompositionEnd) // 复合事件结束监听，如汉字输入结束
         // Safari < 10.2 & UIWebView doesn't fire compositionend when
         // switching focus before confirming composition choice
         // this also fixes the issue where some browsers e.g. iOS Chrome
@@ -128,14 +128,14 @@ function getValue (option) {
 }
 
 function onCompositionStart (e) {
-  e.target.composing = true
+  e.target.composing = true // 复合事件进行中标志
 }
 
 function onCompositionEnd (e) {
   // prevent triggering an input event for no reason
-  if (!e.target.composing) return
-  e.target.composing = false
-  trigger(e.target, 'input')
+  if (!e.target.composing) return // 如果复合事件已经结束，则不作处理
+  e.target.composing = false // 复合事件结束标志
+  trigger(e.target, 'input') // 触发input鼠键
 }
 
 function trigger (el, type) {

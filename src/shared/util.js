@@ -184,6 +184,9 @@ export const capitalize = cached((str: string): string => {
  * 转换为“-”命名
  */
 const hyphenateRE = /\B([A-Z])/g
+/**
+ * 带缓存的将非首字母改为-加小写
+ */
 export const hyphenate = cached((str: string): string => {
   return str.replace(hyphenateRE, '-$1').toLowerCase()
 })

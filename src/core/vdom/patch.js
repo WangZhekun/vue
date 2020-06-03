@@ -169,7 +169,7 @@ export function createPatchFunction (backend) {
    * @param {Array<VNode>} insertedVnodeQueue
    * @param {Node} parentElm 虚拟节点的渲染结果的父节点
    * @param {Node} refElm 虚拟节点的渲染结果在父节点中的插入位置
-   * @param {boolean} nested
+   * @param {boolean} nested 虚拟节点是被嵌套的标志，即非根节点标志
    * @param {Array<VNode>} ownerArray vnode所在的数组
    * @param {number} index vnode在ownerArray中的索引
    */

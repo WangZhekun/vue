@@ -26,6 +26,10 @@ function normalizeStyleData (data: VNodeData): ?Object {
 }
 
 // normalize possible array / string values into Object
+/**
+ * 将动态样式标准化成对象
+ * @param {any} bindingStyle 动态样式
+ */
 export function normalizeStyleBinding (bindingStyle: any): ?Object {
   if (Array.isArray(bindingStyle)) {
     return toObject(bindingStyle)
@@ -40,31 +44,37 @@ export function normalizeStyleBinding (bindingStyle: any): ?Object {
  * parent component style should be after child's
  * so that parent component's style could override it
  */
+/**
+ * 获取虚拟节点的样式对象
+ * 会向上检查父组件，根据checkChild向下检查子组件
+ * @param {VNodeWithData} vnode 虚拟节点
+ * @param {boolean} checkChild 检查子组件标志
+ */
 export function getStyle (vnode: VNodeWithData, checkChild: boolean): Object {
   const res = {}
   let styleData
 
   if (checkChild) {
     let childNode = vnode
-    while (childNode.componentInstance) {
-      childNode = childNode.componentInstance._vnode
+    while (childNode.componentInstance) { // childNode是组件的占位节点
+      childNode = childNode.componentInstance._vnode // 取子组件的根虚拟节点
       if (
         childNode && childNode.data &&
-        (styleData = normalizeStyleData(childNode.data))
+        (styleData = normalizeStyleData(childNode.data)) // 标准化子组件根虚拟节点的样式
       ) {
-        extend(res, styleData)
+        extend(res, styleData) // 合并样式
       }
     }
   }
 
-  if ((styleData = normalizeStyleData(vnode.data))) {
-    extend(res, styleData)
+  if ((styleData = normalizeStyleData(vnode.data))) { // 标准化虚拟节点的样式
+    extend(res, styleData) // 合并样式
   }
 
   let parentNode = vnode
-  while ((parentNode = parentNode.parent)) {
-    if (parentNode.data && (styleData = normalizeStyleData(parentNode.data))) {
-      extend(res, styleData)
+  while ((parentNode = parentNode.parent)) { // vnode作为所属组件的根节点，并向上查找占位节点作为根节点的情况
+    if (parentNode.data && (styleData = normalizeStyleData(parentNode.data))) { // 标准化父组件根虚拟节点的样式
+      extend(res, styleData) // 合并样式
     }
   }
   return res
