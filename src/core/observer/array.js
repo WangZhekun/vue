@@ -23,11 +23,11 @@ const methodsToPatch = [
  */
 methodsToPatch.forEach(function (method) {
   // cache original method
-  const original = arrayProto[method]
-  def(arrayMethods, method, function mutator (...args) {
-    const result = original.apply(this, args)
-    const ob = this.__ob__
-    let inserted
+  const original = arrayProto[method] // Array的原始操作方法
+  def(arrayMethods, method, function mutator (...args) { // 给以Array.prototype为原型创建对象，定义数组操作方法
+    const result = original.apply(this, args) // 执行Array的原始操作方法
+    const ob = this.__ob__ // Observer实例
+    let inserted // 待插入数组的元素
     switch (method) {
       case 'push':
       case 'unshift':
@@ -37,9 +37,9 @@ methodsToPatch.forEach(function (method) {
         inserted = args.slice(2)
         break
     }
-    if (inserted) ob.observeArray(inserted)
+    if (inserted) ob.observeArray(inserted) // 监听该数组的所有元素
     // notify change
-    ob.dep.notify()
+    ob.dep.notify() // 通知变更
     return result
   })
 })

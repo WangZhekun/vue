@@ -2,7 +2,7 @@
 
 import Dep from './dep'
 import VNode from '../vdom/vnode'
-import { arrayMethods } from './array' // arrayMethods为数组的原型对象
+import { arrayMethods } from './array' // arrayMethods为以Array的原型对象为原型创建的对象，并且数组操作方法经过了Observer实例的处理
 import {
   def,
   warn,
