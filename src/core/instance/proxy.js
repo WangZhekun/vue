@@ -35,16 +35,17 @@ if (process.env.NODE_ENV !== 'production') {
   }
 
   const hasProxy =
-    typeof Proxy !== 'undefined' && isNative(Proxy)
+    typeof Proxy !== 'undefined' && isNative(Proxy) // 原生支持Proxy
 
   if (hasProxy) {
     const isBuiltInModifier = makeMap('stop,prevent,self,ctrl,shift,alt,meta,exact')
+    // 创建config.keyCodes的代理
     config.keyCodes = new Proxy(config.keyCodes, {
       set (target, key, value) {
-        if (isBuiltInModifier(key)) {
+        if (isBuiltInModifier(key)) { // 属性是stop,prevent,self,ctrl,shift,alt,meta,exact其中之一
           warn(`Avoid overwriting built-in modifier in config.keyCodes: .${key}`)
           return false
-        } else {
+        } else { // 属性不是stop,prevent,self,ctrl,shift,alt,meta,exact其中之一
           target[key] = value
           return true
         }
@@ -52,11 +53,12 @@ if (process.env.NODE_ENV !== 'production') {
     })
   }
 
+  // target是否有key属性
   const hasHandler = {
     has (target, key) {
-      const has = key in target
+      const has = key in target // key是target的属性
       const isAllowed = allowedGlobals(key) ||
-        (typeof key === 'string' && key.charAt(0) === '_' && !(key in target.$data))
+        (typeof key === 'string' && key.charAt(0) === '_' && !(key in target.$data)) // key是全局属性其中之一，或key是以_开始的字符串且不在响应式数据对象中
       if (!has && !isAllowed) {
         if (key in target.$data) warnReservedPrefix(target, key)
         else warnNonPresent(target, key)
@@ -65,6 +67,7 @@ if (process.env.NODE_ENV !== 'production') {
     }
   }
 
+  // 访问target的属性key
   const getHandler = {
     get (target, key) {
       if (typeof key === 'string' && !(key in target)) {
@@ -75,11 +78,15 @@ if (process.env.NODE_ENV !== 'production') {
     }
   }
 
+  /**
+   * 创建Vue实例的访问代理
+   * @param {Component} vm Vue实例
+   */
   initProxy = function initProxy (vm) {
-    if (hasProxy) {
+    if (hasProxy) { // 原生支持Proxy
       // determine which proxy handler to use
-      const options = vm.$options
-      const handlers = options.render && options.render._withStripped
+      const options = vm.$options // 配置对象
+      const handlers = options.render && options.render._withStripped // 在单元测试中会置render函数的_withStripped属性
         ? getHandler
         : hasHandler
       vm._renderProxy = new Proxy(vm, handlers)
@@ -89,4 +96,4 @@ if (process.env.NODE_ENV !== 'production') {
   }
 }
 
-export { initProxy }
+export { initProxy } // 该模块只在开发模式下使用
