@@ -38,7 +38,7 @@ function flushCallbacks () {
 // where microtasks have too high a priority and fire in between supposedly
 // sequential events (e.g. #4521, #6690, which have workarounds)
 // or even between bubbling of the same event (#6566).
-let timerFunc // 定时器，回调函数为flushCallbacks
+let timerFunc // 注册定时器，回调函数为flushCallbacks。或引起既定回调的执行
 
 // The nextTick behavior leverages the microtask queue, which can be accessed
 // via either native Promise.then or MutationObserver.
@@ -59,21 +59,21 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
     if (isIOS) setTimeout(noop)
   }
   isUsingMicroTask = true
-} else if (!isIE && typeof MutationObserver !== 'undefined' && (
+} else if (!isIE && typeof MutationObserver !== 'undefined' && ( // MutationObserver用来监听DOM的变化
   isNative(MutationObserver) ||
   // PhantomJS and iOS 7.x
   MutationObserver.toString() === '[object MutationObserverConstructor]'
-)) { // TODO: MutationObserver是干什么的？
+)) {
   // Use MutationObserver where native Promise is not available,
   // e.g. PhantomJS, iOS7, Android 4.4
   // (#6466 MutationObserver is unreliable in IE11)
   let counter = 1
-  const observer = new MutationObserver(flushCallbacks)
+  const observer = new MutationObserver(flushCallbacks) // 创建MutationObserver，注册回调
   const textNode = document.createTextNode(String(counter))
-  observer.observe(textNode, {
+  observer.observe(textNode, { // 监听textNode的变化，变化后执行flushCallbacks
     characterData: true
   })
-  timerFunc = () => {
+  timerFunc = () => { // 引起textNode变化
     counter = (counter + 1) % 2
     textNode.data = String(counter)
   }
