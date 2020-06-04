@@ -712,7 +712,7 @@ function genProps (props: Array<ASTAttr>): string {
     const value = __WEEX__
       ? generateValue(prop.value)
       : transformSpecialNewlines(prop.value)
-    if (prop.dynamic) {
+    if (prop.dynamic) { // 动态属性
       dynamicProps += `${prop.name},${value},`
     } else {
       staticProps += `"${prop.name}":${value},`

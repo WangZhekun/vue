@@ -9,9 +9,9 @@ export const isReservedAttr = makeMap('style,class')
 // attributes that should be using props for binding
 const acceptValue = makeMap('input,textarea,option,select,progress') // 返回map的函数 —— map的key为各逗号分隔的子字符串，值为true
 /**
- * 特性（attribute）是否需要被绑定为属性（property）
+ * 特性（attribute）是否需要被绑定为属性（property） TODO：这个有问题
  * @param {string} tag 节点名
- * @param {string} type 类型
+ * @param {string} type type特性的值，如<input type="button">
  * @param {string} attr 属性名
  */
 export const mustUseProp = (tag: string, type: ?string, attr: string): boolean => {

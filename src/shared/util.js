@@ -291,6 +291,7 @@ export function genStaticKeys (modules: Array<ModuleOptions>): string {
 /**
  * Check if two values are loosely equal - that is,
  * if they are plain objects, do they have the same shape?
+ * 判断两个值是否宽松相等，即数组和对象，只要元素和属性值宽松相等，即相等
  */
 export function looseEqual (a: any, b: any): boolean {
   if (a === b) return true
@@ -331,6 +332,7 @@ export function looseEqual (a: any, b: any): boolean {
  * Return the first index at which a loosely equal value can be
  * found in the array (if value is a plain object, the array must
  * contain an object of the same shape), or -1 if it is not present.
+ * 获取arr中与val宽松相等的元素的索引
  */
 export function looseIndexOf (arr: Array<mixed>, val: mixed): number {
   for (let i = 0; i < arr.length; i++) {

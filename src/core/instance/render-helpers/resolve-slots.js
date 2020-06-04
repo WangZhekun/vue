@@ -20,7 +20,7 @@ export function resolveSlots (
   const slots = {}
   for (let i = 0, l = children.length; i < l; i++) { // 遍历子虚拟节点
     const child = children[i]
-    const data = child.data
+    const data = child.data // 子节点的数据对象
     // 如果节点是插槽节点，则删除slot特性 remove slot attribute if the node is resolved as a Vue slot node TODO：为什么要删除
     if (data && data.attrs && data.attrs.slot) { // 节点特性中包含slot TODO：这里的slot特性是节点上的v-slot指令？
       delete data.attrs.slot
@@ -30,7 +30,7 @@ export function resolveSlots (
     if ((child.context === context || child.fnContext === context) &&
       data && data.slot != null
     ) { // 具名插槽
-      const name = data.slot // TODO：需要找到data.slot是怎么来的
+      const name = data.slot // 该属性是具名插槽<templage v-slot:XXX>..</template>中的插槽名
       const slot = (slots[name] || (slots[name] = []))
       if (child.tag === 'template') { // 子节点是<template>
         slot.push.apply(slot, child.children || [])

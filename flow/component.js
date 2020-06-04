@@ -102,35 +102,35 @@ declare interface Component {
     normalizationType?: number
   ) => VNode | void; // 实例的createElement方法，同$createElement类似，但createElement函数执行时参数不同
 
-  // renderStatic
+  // 执行静态render函数，创建静态虚拟节点 renderStatic
   _m: (index: number, isInFor?: boolean) => VNode | VNodeChildren;
-  // markOnce
+  // 设置一次性（v-once）虚拟节点设置相关静态属性 markOnce
   _o: (vnode: VNode | Array<VNode>, index: number, key: string) => VNode | VNodeChildren;
-  // toString
+  // Object原型对象的toString toString
   _s: (value: mixed) => string;
-  // text to VNode
+  // 创建文本虚拟节点 text to VNode
   _v: (value: string | number) => VNode;
-  // toNumber
+  // 将字符串转化为数字 toNumber
   _n: (value: string) => number | string;
-  // empty vnode
+  // 创建注释节点 empty vnode
   _e: () => VNode;
-  // loose equal
+  // 判断两个值是否宽松相等，即数组和对象，只要元素和属性值宽松相等，即相等 loose equal
   _q: (a: mixed, b: mixed) => boolean;
-  // loose indexOf
+  // 获取指定数组中与指定值宽松相等的元素的索引 loose indexOf
   _i: (arr: Array<mixed>, val: mixed) => number;
-  // resolveFilter
+  // 获取指定id的过滤器 resolveFilter
   _f: (id: string) => Function;
-  // renderList
+  // 列表渲染 renderList
   _l: (val: mixed, render: Function) => ?Array<VNode>;
-  // renderSlot
+  // 插槽渲染 renderSlot
   _t: (name: string, fallback: ?Array<VNode>, props: ?Object) => ?Array<VNode>;
-  // apply v-bind object
+  // 将v-bind绑定的属性添加到虚拟节点的数据对象的相应位置 apply v-bind object
   _b: (data: any, tag: string, value: any, asProp: boolean, isSync?: boolean) => VNodeData;
-  // apply v-on object
+  // 将v-on绑定的事件对象合并到虚拟节点的数据对象中 apply v-on object
   _g: (data: any, value: any) => VNodeData;
-  // check custom keyCode
+  // 检查键盘事件的键名和键值是否符合预期 check custom keyCode
   _k: (eventKeyCode: number, key: string, builtInAlias?: number | Array<number>, eventKeyName?: string) => ?boolean;
-  // resolve scoped slots
+  // 处理插槽列表，返回插槽名到可以返回插槽内容的虚拟节点的函数的映射对象 resolve scoped slots
   _u: (scopedSlots: ScopedSlotsData, res?: Object) => { [key: string]: Function };
 
   // SSR specific

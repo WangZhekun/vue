@@ -82,6 +82,10 @@ export default class VNode {
   }
 }
 
+/**
+ * 创建注释节点
+ * @param {string} text 节点内容，默认为空
+ */
 export const createEmptyVNode = (text: string = '') => {
   const node = new VNode()
   node.text = text
