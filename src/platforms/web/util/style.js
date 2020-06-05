@@ -2,6 +2,9 @@
 
 import { cached, extend, toObject } from 'shared/util'
 
+/**
+ * 将style特性的值（字符串）转为对象
+ */
 export const parseStyleText = cached(function (cssText) {
   const res = {}
   const listDelimiter = /;(?![^(]*\))/g

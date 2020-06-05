@@ -13,8 +13,8 @@ declare type ComponentOptions = {
 
   // data
   data: Object | Function | void;
-  props?: { [key: string]: PropOptions };
-  propsData?: ?Object;
+  props?: { [key: string]: PropOptions }; // 组件的属性配置
+  propsData?: ?Object; // 所属组件的占位节点的属性绑定对象
   computed?: {
     [key: string]: Function | {
       get?: Function;
@@ -73,7 +73,7 @@ declare type ComponentOptions = {
 
   // private
   _isComponent?: true;
-  _propKeys?: Array<string>;
+  _propKeys?: Array<string>; // 组件的属性名列表
   _parentVnode?: VNode; // 组件在父实例中的虚拟节点
   _parentListeners?: ?Object; // 组件在父组件内的虚拟节点监听的事件
   _renderChildren?: ?Array<VNode>; // 组件在父组件内的节点内的子虚拟节点列表

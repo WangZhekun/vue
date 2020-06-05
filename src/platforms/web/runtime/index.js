@@ -37,7 +37,7 @@ Vue.prototype.__patch__ = inBrowser ? patch : noop // 创建、更新、删除VN
 /**
  * 挂载函数
  * @param {string | Element} el 挂载点
- * @param {boolean} hydrating
+ * @param {boolean} hydrating 是否将DOM节点与vnode关联
  */
 Vue.prototype.$mount = function (
   el?: string | Element,

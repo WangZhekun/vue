@@ -111,7 +111,7 @@ declare type ASTElement = {
   start?: number;
   end?: number;
 
-  processed?: true;
+  processed?: true; // 是否做过编译处理
 
   static?: boolean; // 是否为静态节点
   staticRoot?: boolean; // 是否为静态根节点，即当前节点为静态节点，且只包含一个子节点，子节点为文本节点
@@ -127,7 +127,7 @@ declare type ASTElement = {
   pre?: true; // 是否跳过这个元素和它的子元素的编译过程
   ns?: string; // HTML标签的命名空间
 
-  component?: string;
+  component?: string; // 节点是组件
   inlineTemplate?: true;
   transitionMode?: string | null;
   slotName?: ?string; // 插槽名
@@ -152,17 +152,17 @@ declare type ASTElement = {
   iterator1?: string; // 遍历器
   iterator2?: string; // 索引
 
-  staticClass?: string;
-  classBinding?: string;
-  staticStyle?: string;
-  styleBinding?: string;
-  events?: ASTElementHandlers;
-  nativeEvents?: ASTElementHandlers;
+  staticClass?: string; // 静态class特性
+  classBinding?: string; // 动态class的表达式
+  staticStyle?: string; // 静态style，内联样式字符串解析成对象后再转成的JSON串
+  styleBinding?: string; // 动态style的表达式
+  events?: ASTElementHandlers; // 节点的事件监听对象
+  nativeEvents?: ASTElementHandlers; // 组件根节点的原生事件监听对象
 
   transition?: string | true;
   transitionOnAppear?: boolean;
 
-  model?: {
+  model?: { // v-model指令编译结果
     value: string;
     callback: string;
     expression: string;
