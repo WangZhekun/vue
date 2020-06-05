@@ -158,6 +158,10 @@ function callUpdatedHooks (queue) {
  * Queue a kept-alive component that was activated during patch.
  * The queue will be processed after the entire tree has been patched.
  */
+/**
+ * 激活组件实例，并加入到已激活列表中
+ * @param {Component} vm 待激活Vue实例
+ */
 export function queueActivatedComponent (vm: Component) {
   // setting _inactive to false here so that a render function can
   // rely on checking whether it's in an inactive tree (e.g. router-view)

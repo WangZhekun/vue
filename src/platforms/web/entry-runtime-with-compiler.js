@@ -27,7 +27,7 @@ const mount = Vue.prototype.$mount // 缓存原挂载方法
  * 定义新挂载方法
  * 新挂载方法中处理了无render函数的情况，将模板转化为render函数，再调用原挂载方法
  * @param {string | Element} el DOM节点的选择器，或节点对象，Vue实例的挂载点
- * @param {boolean} hydrating
+ * @param {boolean} hydrating 是否将DOM节点与vnode关联
  */
 Vue.prototype.$mount = function (
   el?: string | Element,

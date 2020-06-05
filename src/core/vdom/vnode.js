@@ -30,7 +30,7 @@ export default class VNode {
   fnScopeId: ?string; // functional scope id support
 
   /**
-   *
+   * 虚拟节点构造方法
    * @param {string} tag 标签名
    * @param {VNodeData} data 虚拟节点的配置数据对象
    * @param {Array<VNode>} children 子节点

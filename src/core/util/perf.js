@@ -1,5 +1,7 @@
 import { inBrowser } from './env'
 
+// TODO：这个文件应该是跟开发环境性能有关系的，怎么用
+
 export let mark
 export let measure
 

@@ -110,7 +110,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
   Vue.prototype.$forceUpdate = function () {
     const vm: Component = this
     if (vm._watcher) { // 当前Vue实例的组件模板对应的Watcher实例存在
-      vm._watcher.update()
+      vm._watcher.update() // 强制更新
     }
   }
 
@@ -165,7 +165,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
  * 创建模板对应的Watcher实例，完成模板渲染
  * @param {Component} vm Vue实例
  * @param {Element} el 挂载点
- * @param {boolean} hydrating
+ * @param {boolean} hydrating 是否将DOM节点与vnode关联
  */
 export function mountComponent (
   vm: Component,
@@ -242,6 +242,14 @@ export function mountComponent (
   return vm
 }
 
+/**
+ * 更新子组件实例
+ * @param {Component} vm Vue实例
+ * @param {Object} propsData 占位节点上配置的，组件属性绑定对象
+ * @param {Object} listeners 占位节点上配置的，组件事件监听配置对象
+ * @param {MountedComponentVNode} parentVnode 占位节点
+ * @param {Array<VNode>} renderChildren 插槽内容
+ */
 export function updateChildComponent (
   vm: Component,
   propsData: ?Object,
@@ -259,62 +267,62 @@ export function updateChildComponent (
   // check if there are dynamic scopedSlots (hand-written or compiled but with
   // dynamic slot names). Static scoped slots compiled from template has the
   // "$stable" marker.
-  const newScopedSlots = parentVnode.data.scopedSlots
-  const oldScopedSlots = vm.$scopedSlots
-  const hasDynamicScopedSlot = !!(
-    (newScopedSlots && !newScopedSlots.$stable) ||
-    (oldScopedSlots !== emptyObject && !oldScopedSlots.$stable) ||
-    (newScopedSlots && vm.$scopedSlots.$key !== newScopedSlots.$key)
+  const newScopedSlots = parentVnode.data.scopedSlots // 占位节点的插槽内容
+  const oldScopedSlots = vm.$scopedSlots // 旧组件实例的插槽内容
+  const hasDynamicScopedSlot = !!( // 有动态插槽，或插槽内容有变更
+    (newScopedSlots && !newScopedSlots.$stable) || // 新插槽内容有动态key
+    (oldScopedSlots !== emptyObject && !oldScopedSlots.$stable) || // 旧插槽内容不为空，且有动态key
+    (newScopedSlots && vm.$scopedSlots.$key !== newScopedSlots.$key) // 旧插槽列表的hash值与新插槽列表的hash值不一样
   )
 
   // Any static slot children from the parent may have changed during parent's
   // update. Dynamic scoped slots may also have changed. In such cases, a forced
   // update is necessary to ensure correctness.
-  const needsForceUpdate = !!(
-    renderChildren ||               // has new static slots
-    vm.$options._renderChildren ||  // has old static slots
-    hasDynamicScopedSlot
+  const needsForceUpdate = !!( // 需要强制更新 TODO：调用这个方法表示静态插槽有变更？
+    renderChildren ||               // has new static slots 有新静态插槽 TODO：静态插槽？动态插槽？
+    vm.$options._renderChildren ||  // has old static slots 有旧静态插槽
+    hasDynamicScopedSlot // 有动态插槽，或插槽内容有变更
   )
 
-  vm.$options._parentVnode = parentVnode // _parentVnode为当前Vue实例在父实例中的虚拟节点
+  vm.$options._parentVnode = parentVnode // _parentVnode为vm的占位节点
   vm.$vnode = parentVnode // update vm's placeholder node without re-render
 
-  if (vm._vnode) { // update child tree's parent
+  if (vm._vnode) { // 更新组件的虚拟节点树的父节点（占位节点） update child tree's parent
     vm._vnode.parent = parentVnode
   }
-  vm.$options._renderChildren = renderChildren
+  vm.$options._renderChildren = renderChildren // 更新插槽内容
 
   // update $attrs and $listeners hash
   // these are also reactive so they may trigger child update if the child
   // used them during render
-  vm.$attrs = parentVnode.data.attrs || emptyObject
-  vm.$listeners = listeners || emptyObject
+  vm.$attrs = parentVnode.data.attrs || emptyObject // 更新占位节点的特性集合
+  vm.$listeners = listeners || emptyObject // 更新占位节点上配置的事件监听
 
-  // update props
-  if (propsData && vm.$options.props) {
-    toggleObserving(false)
-    const props = vm._props
-    const propKeys = vm.$options._propKeys || []
-    for (let i = 0; i < propKeys.length; i++) {
+  // update props 更新组件属性
+  if (propsData && vm.$options.props) { // 占位节点配置的属性对象存在，且组件有定义属性
+    toggleObserving(false) // 全局的不可监听
+    const props = vm._props // 取组件实例中的属性对象
+    const propKeys = vm.$options._propKeys || [] // 取组件的属性名列表
+    for (let i = 0; i < propKeys.length; i++) { // 遍历属性名
       const key = propKeys[i]
-      const propOptions: any = vm.$options.props // wtf flow?
-      props[key] = validateProp(key, propOptions, propsData, vm)
+      const propOptions: any = vm.$options.props // wtf flow? 属性配置
+      props[key] = validateProp(key, propOptions, propsData, vm) // 获取属性绑定对象中指定属性的值，并更新之
     }
-    toggleObserving(true)
+    toggleObserving(true) // 全局可监听
     // keep a copy of raw propsData
-    vm.$options.propsData = propsData
+    vm.$options.propsData = propsData // 更新组件配置对象中的属性绑定对象
   }
 
-  // update listeners
+  // update listeners 更新事件监听
   listeners = listeners || emptyObject
-  const oldListeners = vm.$options._parentListeners
-  vm.$options._parentListeners = listeners
-  updateComponentListeners(vm, listeners, oldListeners)
+  const oldListeners = vm.$options._parentListeners // 旧的占位节点配置的事件监听对象
+  vm.$options._parentListeners = listeners // 更新占位节点配置的事件监听对象
+  updateComponentListeners(vm, listeners, oldListeners) // 更新组件的事件监听
 
   // resolve slots + force update if has children
-  if (needsForceUpdate) {
-    vm.$slots = resolveSlots(renderChildren, parentVnode.context)
-    vm.$forceUpdate()
+  if (needsForceUpdate) { // 插槽内容需要强制更新
+    vm.$slots = resolveSlots(renderChildren, parentVnode.context) // 获取插槽名到vnode列表的映射
+    vm.$forceUpdate() // 强制更新
   }
 
   if (process.env.NODE_ENV !== 'production') {
@@ -322,6 +330,10 @@ export function updateChildComponent (
   }
 }
 
+/**
+ * 判断vm所在的组件树是否已失活
+ * @param {Component} vm Vue实例
+ */
 function isInInactiveTree (vm) {
   while (vm && (vm = vm.$parent)) {
     if (vm._inactive) return true
@@ -332,30 +344,30 @@ function isInInactiveTree (vm) {
 /**
  * 激活keep-alive缓存的组件树
  * @param {Component} vm Vue实例
- * @param {boolean} direct
+ * @param {boolean} direct 直接激活，即置直接失活标志为false
  */
 export function activateChildComponent (vm: Component, direct?: boolean) {
   if (direct) {
-    vm._directInactive = false
-    if (isInInactiveTree(vm)) {
+    vm._directInactive = false // 直接失活标志置false
+    if (isInInactiveTree(vm)) { // vm所在的组件树已失活
       return
     }
-  } else if (vm._directInactive) {
+  } else if (vm._directInactive) { // 直接失活标志为true
     return
   }
   if (vm._inactive || vm._inactive === null) { // 组件不活跃
     vm._inactive = false // 激活
     for (let i = 0; i < vm.$children.length; i++) {
-      activateChildComponent(vm.$children[i])
+      activateChildComponent(vm.$children[i]) // 激活keep-alive缓存的子组件
     }
-    callHook(vm, 'activated')
+    callHook(vm, 'activated') // 调用激活钩子
   }
 }
 
 /**
  * 使keep-alive缓存的组件树失活
  * @param {Component} vm Vue实例
- * @param {boolean} direct
+ * @param {boolean} direct 直接失活，即置直接失活标志为true
  */
 export function deactivateChildComponent (vm: Component, direct?: boolean) {
   if (direct) {

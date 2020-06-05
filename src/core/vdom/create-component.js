@@ -33,29 +33,40 @@ import {
 } from 'weex/runtime/recycle-list/render-component-template'
 
 // inline hooks to be invoked on component VNodes during patch
+// 组件的虚拟节点的钩子，在虚拟节点渲染时执行
 const componentVNodeHooks = {
+  /**
+   * 初始化钩子
+   * @param {VNodeWithData} vnode 虚拟节点
+   * @param {boolean} hydrating 是否将DOM节点与vnode关联
+   */
   init (vnode: VNodeWithData, hydrating: boolean): ?boolean {
     if (
-      vnode.componentInstance &&
-      !vnode.componentInstance._isDestroyed &&
-      vnode.data.keepAlive
+      vnode.componentInstance && // 虚拟节点作为组件的占位节点
+      !vnode.componentInstance._isDestroyed && // 占位节点对应的组件实例没有被销毁
+      vnode.data.keepAlive // 虚拟节点被缓存
     ) {
       // kept-alive components, treat as a patch
       const mountedNode: any = vnode // work around flow
-      componentVNodeHooks.prepatch(mountedNode, mountedNode)
-    } else {
-      const child = vnode.componentInstance = createComponentInstanceForVnode(
+      componentVNodeHooks.prepatch(mountedNode, mountedNode) // 执行预渲染的钩子
+    } else { // 非占位节点，或占位节点组件实例被销毁，或虚拟节点没有被缓存
+      const child = vnode.componentInstance = createComponentInstanceForVnode( // 为占位节点创建对应的组件实例
         vnode,
         activeInstance
       )
-      child.$mount(hydrating ? vnode.elm : undefined, hydrating)
+      child.$mount(hydrating ? vnode.elm : undefined, hydrating) // 挂载
     }
   },
 
+  /**
+   * 预渲染钩子
+   * @param {MountedComponentVNode} oldVnode 旧虚拟节点
+   * @param {MountedComponentVNode} vnode 新虚拟节点
+   */
   prepatch (oldVnode: MountedComponentVNode, vnode: MountedComponentVNode) {
-    const options = vnode.componentOptions
-    const child = vnode.componentInstance = oldVnode.componentInstance
-    updateChildComponent(
+    const options = vnode.componentOptions // 作为占位节点的对应组件的配置对象
+    const child = vnode.componentInstance = oldVnode.componentInstance // 作为占位节点的对应组件的实例
+    updateChildComponent( // 更新子组件实例
       child,
       options.propsData, // updated props
       options.listeners, // updated listeners
@@ -64,39 +75,47 @@ const componentVNodeHooks = {
     )
   },
 
+  /**
+   * 关联DOM与虚拟节点的钩子
+   * @param {MountedComponentVNode} vnode 虚拟节点
+   */
   insert (vnode: MountedComponentVNode) {
-    const { context, componentInstance } = vnode
-    if (!componentInstance._isMounted) {
-      componentInstance._isMounted = true
-      callHook(componentInstance, 'mounted')
+    const { context, componentInstance } = vnode // context是虚拟节点的渲染上下文，componentInstance为占位节点对应的组件的实例
+    if (!componentInstance._isMounted) { // 子组件未挂载
+      componentInstance._isMounted = true // 置挂载标志
+      callHook(componentInstance, 'mounted') // 执行已挂载钩子
     }
-    if (vnode.data.keepAlive) {
-      if (context._isMounted) {
+    if (vnode.data.keepAlive) { // 虚拟节点已缓存
+      if (context._isMounted) { // 虚拟节点的渲染上下文已挂载
         // vue-router#1212
         // During updates, a kept-alive component's child components may
         // change, so directly walking the tree here may call activated hooks
         // on incorrect children. Instead we push them into a queue which will
         // be processed after the whole patch process ended.
-        queueActivatedComponent(componentInstance)
-      } else {
-        activateChildComponent(componentInstance, true /* direct */)
+        queueActivatedComponent(componentInstance) // 激活子组件实例，并加入到已激活列表中
+      } else { // 虚拟节点的渲染上下文未挂载
+        activateChildComponent(componentInstance, true /* direct */) // 激活keep-alive缓存的组件树，直接激活
       }
     }
   },
 
+  /**
+   * 销毁钩子
+   * @param {MountedComponentVNode} vnode 虚拟节点
+   */
   destroy (vnode: MountedComponentVNode) {
-    const { componentInstance } = vnode
-    if (!componentInstance._isDestroyed) {
-      if (!vnode.data.keepAlive) {
-        componentInstance.$destroy()
+    const { componentInstance } = vnode // 作为占位节点所对应的组件实例
+    if (!componentInstance._isDestroyed) { // 子组件未挂载
+      if (!vnode.data.keepAlive) { // 虚拟节点未缓存
+        componentInstance.$destroy() // 销毁子组件实例
       } else {
-        deactivateChildComponent(componentInstance, true /* direct */)
+        deactivateChildComponent(componentInstance, true /* direct */) // 使keep-alive缓存的组件树失活
       }
     }
   }
 }
 
-const hooksToMerge = Object.keys(componentVNodeHooks)
+const hooksToMerge = Object.keys(componentVNodeHooks) // 取待合并的钩子名称
 
 /**
  * 创建组件的占位虚拟节点
@@ -217,6 +236,11 @@ export function createComponent (
   return vnode
 }
 
+/**
+ * 为占位节点创建对应的组件实例
+ * @param {any} vnode 组件的占位节点
+ * @param {any} parent 正在活跃的Vue实例
+ */
 export function createComponentInstanceForVnode (
   vnode: any, // we know it's MountedComponentVNode but flow doesn't
   parent: any, // activeInstance in lifecycle state
@@ -227,12 +251,12 @@ export function createComponentInstanceForVnode (
     parent
   }
   // check inline-template render functions
-  const inlineTemplate = vnode.data.inlineTemplate
-  if (isDef(inlineTemplate)) {
+  const inlineTemplate = vnode.data.inlineTemplate // 组件的内联模板
+  if (isDef(inlineTemplate)) { // 取内联模板的render方法
     options.render = inlineTemplate.render
     options.staticRenderFns = inlineTemplate.staticRenderFns
   }
-  return new vnode.componentOptions.Ctor(options)
+  return new vnode.componentOptions.Ctor(options) // 创建组件实例
 }
 
 /**
