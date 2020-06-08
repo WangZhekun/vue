@@ -1,7 +1,7 @@
 /* @flow */
 
 /**
- * 虚拟节点是异步占位接单
+ * 虚拟节点是异步占位节点
  * @param {VNode} node 虚拟节点
  */
 export function isAsyncPlaceholder (node: VNode): boolean {

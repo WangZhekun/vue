@@ -9,4 +9,4 @@ import platformModules from 'web/runtime/modules/index' // 平台运行时模块
 // built-in modules have been applied.
 const modules = platformModules.concat(baseModules) // 合并基础模块和平台运行时模板
 
-export const patch: Function = createPatchFunction({ nodeOps, modules })
+export const patch: Function = createPatchFunction({ nodeOps, modules }) // 获取创建、更新、删除VNode树的函数

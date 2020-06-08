@@ -527,7 +527,7 @@ export function createPatchFunction (backend) {
    * @param {Array<VNode>} oldCh 旧子节点
    * @param {Array<VNode>} newCh 新子节点
    * @param {Array<VNode>} insertedVnodeQueue
-   * @param {boolean} removeOnly 删除标志
+   * @param {boolean} removeOnly 旧子节点的删除标志，当为false时，旧子节点会根据新子节点排序 TODO: 然而有什么用呢？
    */
   function updateChildren (parentElm, oldCh, newCh, insertedVnodeQueue, removeOnly) {
     let oldStartIdx = 0
@@ -564,15 +564,15 @@ export function createPatchFunction (backend) {
         newEndVnode = newCh[--newEndIdx] // 取上一个结尾新子节点
       } else if (sameVnode(oldStartVnode, newEndVnode)) { // 第一个旧子节点与最后一个新子节点相同，即第一个旧子节点之后的所有节点删除。Vnode moved right
         patchVnode(oldStartVnode, newEndVnode, insertedVnodeQueue, newCh, newEndIdx) // 重新渲染最后一个新子节点
-        canMove && nodeOps.insertBefore(parentElm, oldStartVnode.elm, nodeOps.nextSibling(oldEndVnode.elm)) // 如果不删除，将第一个旧子节点的DOM插入到其下一个兄弟节点之前
+        canMove && nodeOps.insertBefore(parentElm, oldStartVnode.elm, nodeOps.nextSibling(oldEndVnode.elm)) // 如果不删除，将第一个旧子节点的DOM插入到最后一个旧子节点的下一个兄弟节点之前
         oldStartVnode = oldCh[++oldStartIdx] // 取下一个起始旧子节点
         newEndVnode = newCh[--newEndIdx] // 取上一个结尾新子节点
       } else if (sameVnode(oldEndVnode, newStartVnode)) { // 最后一个旧子节点与第一个新子节点相同，即最后一个旧子节点前的所有节点删除。Vnode moved left
         patchVnode(oldEndVnode, newStartVnode, insertedVnodeQueue, newCh, newStartIdx) // 重新渲染第一个新子节点
-        canMove && nodeOps.insertBefore(parentElm, oldEndVnode.elm, oldStartVnode.elm) // 如果不删除，将最后一个旧子节点的DOM插入到第一个新子节点的DOM之前
+        canMove && nodeOps.insertBefore(parentElm, oldEndVnode.elm, oldStartVnode.elm) // 如果不删除，将最后一个旧子节点的DOM插入到第一个新子节点的DOM之前 TODO：这里为什么要插入
         oldEndVnode = oldCh[--oldEndIdx] // 取上一个结尾旧子节点
         newStartVnode = newCh[++newStartIdx] // 取下一个起始新子节点
-      } else { // 其他混合情况
+      } else { // 其他混合情况 —— 边界的新旧两对节点没有相同的
         if (isUndef(oldKeyToIdx)) oldKeyToIdx = createKeyToOldIdx(oldCh, oldStartIdx, oldEndIdx) // 获取children的key到索引的映射
         idxInOld = isDef(newStartVnode.key) // 起始新节点有key属性
           ? oldKeyToIdx[newStartVnode.key] // 取key属性对应的旧节点
@@ -640,7 +640,7 @@ export function createPatchFunction (backend) {
    * @param {Array<VNode>} insertedVnodeQueue
    * @param {Array<VNode>} ownerArray 新虚拟节点树所在的数组
    * @param {number} index 新虚拟节点树在数组中的索引
-   * @param {boolean} removeOnly 删除标志
+   * @param {boolean} removeOnly 更新子节点时用。旧子节点的删除标志，当为false时，旧子节点会根据新子节点排序
    */
   function patchVnode (
     oldVnode,
@@ -862,7 +862,7 @@ export function createPatchFunction (backend) {
    * @param {VNode | Element} oldVnode 旧VNode节点树，或DOM节点
    * @param {VNode} vnode 新VNode节点树，组件的根节点
    * @param {boolean} hydrating 是否将DOM节点与vnode关联
-   * @param {boolean} removeOnly
+   * @param {boolean} removeOnly 更新子节点时用。旧子节点的删除标志，当为false时，旧子节点会根据新子节点排序
    */
   return function patch (oldVnode, vnode, hydrating, removeOnly) {
     if (isUndef(vnode)) { // vnode未定义，即删除节点
