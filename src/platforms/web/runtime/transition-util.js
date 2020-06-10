@@ -192,14 +192,14 @@ export function getTransitionInfo (el: Element, expectedType?: ?string): {
         : animationDurations.length
       : 0
   }
-  const hasTransform: boolean = // 过渡是否应用到转换transform
+  const hasTransform: boolean = // 过渡效果是否应用到转换（transform）样式
     type === TRANSITION &&
     transformRE.test(styles[transitionProp + 'Property']) // transitionProperty样式，应用过渡效果的css属性。应用过渡效果的是转换（transform）或全部
   return {
     type, // 侦听的过渡事件类型
     timeout, // 过渡/动画耗时
     propCount, // 过渡/动画持续时间数组的长度
-    hasTransform // 过渡是否应用到转换transform
+    hasTransform // 过渡效果是否应用到转换（transform）样式
   }
 }
 

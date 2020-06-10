@@ -50,7 +50,7 @@ declare interface VNodeData {
   hook?: { [key: string]: Function };
   on?: ?{ [key: string]: Function | Array<Function> };
   nativeOn?: { [key: string]: Function | Array<Function> };
-  transition?: Object;
+  transition?: Object; // 获取transition或transition-group组件的占位节点（即<transition>或<transition-group>）上的属性和事件
   show?: boolean; // marker for v-show
   inlineTemplate?: {
     render: Function;
