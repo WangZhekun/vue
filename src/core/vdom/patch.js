@@ -715,7 +715,7 @@ export function createPatchFunction (backend) {
       nodeOps.setTextContent(elm, vnode.text) // 设置DOM节点的textContent属性
     }
     if (isDef(data)) {
-      if (isDef(i = data.hook) && isDef(i = i.postpatch)) i(oldVnode, vnode) // 执行postpatch钩子
+      if (isDef(i = data.hook) && isDef(i = i.postpatch)) i(oldVnode, vnode) // 执行postpatch钩子，重新渲染完毕
     }
   }
 
