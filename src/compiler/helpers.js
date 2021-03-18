@@ -57,14 +57,14 @@ export function addRawAttr (el: ASTElement, name: string, value: any, range?: Ra
 }
 
 export function addDirective (
-  el: ASTElement,
-  name: string,
-  rawName: string,
-  value: string,
-  arg: ?string,
-  isDynamicArg: boolean,
-  modifiers: ?ASTModifiers,
-  range?: Range
+  el: ASTElement, // 模板的DOM节点
+  name: string, // 指令名称，去掉前缀的
+  rawName: string, // 指令完整名称
+  value: string, // 指令绑定内容
+  arg: ?string, // 指令修饰符
+  isDynamicArg: boolean, // 是否是动态修饰符
+  modifiers: ?ASTModifiers, // 指令的modifier对象
+  range?: Range // 模板的DOM节点的属性对象
 ) {
   (el.directives || (el.directives = [])).push(rangeSetItem({
     name,

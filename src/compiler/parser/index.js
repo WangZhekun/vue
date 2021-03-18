@@ -853,16 +853,16 @@ function processComponent (el) {
 }
 
 function processAttrs (el) {
-  const list = el.attrsList
+  const list = el.attrsList // 模板中DOM节点的属性列表
   let i, l, name, rawName, value, modifiers, syncGen, isDynamic
   for (i = 0, l = list.length; i < l; i++) {
     name = rawName = list[i].name
     value = list[i].value
-    if (dirRE.test(name)) {
+    if (dirRE.test(name)) { // 属性是绑定属性
       // mark element as dynamic
       el.hasBindings = true
       // modifiers
-      modifiers = parseModifiers(name.replace(dirRE, ''))
+      modifiers = parseModifiers(name.replace(dirRE, '')) // 去掉属性前缀，如v-、@之类的标记，将属性解析成modifier
       // support .foo shorthand syntax for the .prop modifier
       if (process.env.VBIND_PROP_SHORTHAND && propBindRE.test(name)) {
         (modifiers || (modifiers = {})).prop = true
@@ -946,13 +946,13 @@ function processAttrs (el) {
         }
         addHandler(el, name, value, modifiers, false, warn, list[i], isDynamic)
       } else { // normal directives
-        name = name.replace(dirRE, '')
+        name = name.replace(dirRE, '') // 去掉属性前缀，如v-、@之类的标记
         // parse arg
-        const argMatch = name.match(argRE)
-        let arg = argMatch && argMatch[1]
+        const argMatch = name.match(argRE) // 匹配指令的修饰符
+        let arg = argMatch && argMatch[1] // 指令的修饰符
         isDynamic = false
         if (arg) {
-          name = name.slice(0, -(arg.length + 1))
+          name = name.slice(0, -(arg.length + 1)) // 去掉修饰符
           if (dynamicArgRE.test(arg)) {
             arg = arg.slice(1, -1)
             isDynamic = true

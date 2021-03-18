@@ -179,9 +179,9 @@ export default class Watcher {
    */
   update () {
     /* istanbul ignore else */
-    if (this.lazy) {
+    if (this.lazy) { // 懒模式
       this.dirty = true
-    } else if (this.sync) {
+    } else if (this.sync) { // 同步
       this.run()
     } else {
       queueWatcher(this)

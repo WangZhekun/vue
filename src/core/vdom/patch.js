@@ -34,8 +34,8 @@ const hooks = ['create', 'activate', 'update', 'remove', 'destroy']
 
 /**
  * a和b是否是相同的虚拟节点
- * @param {VNode} a 虚拟节点
- * @param {VNode} b 虚拟节点
+ * @param {VNode} a 旧虚拟节点
+ * @param {VNode} b 新虚拟节点
  */
 function sameVnode (a, b) {
   return (
@@ -297,7 +297,7 @@ export function createPatchFunction (backend) {
       insertedVnodeQueue.push.apply(insertedVnodeQueue, vnode.data.pendingInsert)
       vnode.data.pendingInsert = null
     }
-    vnode.elm = vnode.componentInstance.$el // 取组件的挂载点
+    vnode.elm = vnode.componentInstance.$el // 取组件的DOM树
     if (isPatchable(vnode)) { // vnode是否可更新，即vnode是非空节点
       invokeCreateHooks(vnode, insertedVnodeQueue) // 执行create钩子
       setScope(vnode) // 给vnode的渲染结果上添加插槽id的特性
@@ -674,7 +674,7 @@ export function createPatchFunction (backend) {
     // note we only do this if the vnode is cloned -
     // if the new node is not cloned it means the render functions have been
     // reset by the hot-reload-api and we need to do a proper re-render.
-    // 新旧虚拟节点都是静态节点
+    // 新旧虚拟节点都是静态节点，并且key相同
     // 静态节点不需要重新渲染
     if (isTrue(vnode.isStatic) &&
       isTrue(oldVnode.isStatic) &&
@@ -708,7 +708,7 @@ export function createPatchFunction (backend) {
         addVnodes(elm, null, ch, 0, ch.length - 1, insertedVnodeQueue) // 创建新虚拟节点的子节点的DOM树
       } else if (isDef(oldCh)) { // 旧虚拟节点的子节点存在，新的不存在
         removeVnodes(oldCh, 0, oldCh.length - 1) // 删除旧虚拟节点的子节点
-      } else if (isDef(oldVnode.text)) { // 就虚拟节点是文本节点
+      } else if (isDef(oldVnode.text)) { // 旧虚拟节点是文本节点
         nodeOps.setTextContent(elm, '') // 清空DOM节点的textContent属性
       }
     } else if (oldVnode.text !== vnode.text) { // 新虚拟节点是文本节点，新旧虚拟节点的文本不相同
@@ -876,13 +876,14 @@ export function createPatchFunction (backend) {
     if (isUndef(oldVnode)) { // oldVnode未定义，即新增节点
       // empty mount (likely as component), create new root element
       isInitialPatch = true // 置初始化标志
-      createElm(vnode, insertedVnodeQueue) // 创建vnode树的elm树
+      createElm(vnode, insertedVnodeQueue) // 创建vnode树的DOM树
     } else { // 更新节点
       const isRealElement = isDef(oldVnode.nodeType) // oldVnode是否是DOM节点
-      if (!isRealElement && sameVnode(oldVnode, vnode)) { // oldVnode是VNode节点，oldVnode与vnode相同
+      if (!isRealElement && sameVnode(oldVnode, vnode)) { // oldVnode不是DOM节点，oldVnode与vnode相同
         // patch existing root node
         patchVnode(oldVnode, vnode, insertedVnodeQueue, null, null, removeOnly) // 重新渲染新虚拟节点
       } else { // oldVnode不是VNode节点，或oldVnode与vnode不相同
+        // 这里之所以将“oldVnode不是VNode节点”，“oldVnode与vnode不相同”这两个条件放到一起，是因为这两个条件的处理方式都是重新渲染vnode
         if (isRealElement) { // oldVnode是DOM节点
           // mounting to a real element
           // check if this is server-rendered content and if we can perform
@@ -931,11 +932,11 @@ export function createPatchFunction (backend) {
         if (isDef(vnode.parent)) { // 新VNode节点存在父节点，即组件在父实例中有占位节点
           let ancestor = vnode.parent // 新VNode节点的祖先节点
           const patchable = isPatchable(vnode) // vnode可更新
-          while (ancestor) {
+          while (ancestor) { // 遍历祖先节点，是因为可能存在多层抽象组件（或父组件模板中只有一个子组件）嵌套的情况
             for (let i = 0; i < cbs.destroy.length; ++i) { // 执行新VNode节点的父节点的destory钩子
               cbs.destroy[i](ancestor)
             }
-            ancestor.elm = vnode.elm // TODO：为什么要修改父节点的DOM
+            ancestor.elm = vnode.elm // TODO：为什么要修改父节点的DOM  答：将组件的渲染结果赋值给，组件在父组件中占位节点的VNode的elm
             if (patchable) { // vnode可更新
               for (let i = 0; i < cbs.create.length; ++i) { // 执行新VNode节点的父节点的create钩子
                 cbs.create[i](emptyNode, ancestor)

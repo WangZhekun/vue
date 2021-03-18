@@ -213,7 +213,7 @@ export function createComponent (
   }
 
   // install component management hooks onto the placeholder node
-  // 合并组件的钩子
+  // 合并虚拟节点的钩子
   installComponentHooks(data)
 
   // return a placeholder vnode

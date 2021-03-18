@@ -43,7 +43,7 @@ export function initMixin (Vue: Class<Component>) {
       // optimize internal component instantiation
       // since dynamic options merging is pretty slow, and none of the
       // internal component options needs special treatment.
-      initInternalComponent(vm, options) // TODO: 先放着
+      initInternalComponent(vm, options) // 初始化vm的$options
     } else { // 非组件实例
       vm.$options = mergeOptions( // 合并实例初始化配置对象和全局配置对象
         resolveConstructorOptions(vm.constructor), // 根据当前实例的构造方法的父类（如果有）的全局配置，更新并获取全局配置
@@ -82,7 +82,7 @@ export function initMixin (Vue: Class<Component>) {
 }
 
 /**
- *
+ * 初始化vm的$options
  * @param {Component} vm Vue实例
  * @param {InternalComponentOptions} options 配置项
  */

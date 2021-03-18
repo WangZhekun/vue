@@ -50,7 +50,7 @@ export default function model (
     genCheckboxModel(el, value, modifiers)
   } else if (tag === 'input' && type === 'radio') { // 节点是input type="radio"
     genRadioModel(el, value, modifiers)
-  } else if (tag === 'input' || tag === 'textarea') { // 节点是input type="textarea"
+  } else if (tag === 'input' || tag === 'textarea') { // 节点是input 或 textarea
     genDefaultModel(el, value, modifiers) // 编译默认的v-model指令相关的属性和事件
   } else if (!config.isReservedTag(tag)) { // 节点不是平台原生标签
     genComponentModel(el, value, modifiers)

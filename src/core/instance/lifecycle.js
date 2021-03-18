@@ -83,10 +83,10 @@ export function lifecycleMixin (Vue: Class<Component>) {
     // based on the rendering backend used.
     if (!prevVnode) { // 无虚拟节点树
       // initial render
-      vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */) // 创建VNode树 - 第一次渲染
+      vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */) // 渲染VNode树 - 第一次渲染
     } else {
       // updates
-      vm.$el = vm.__patch__(prevVnode, vnode) // 创建VNode树 - 更新渲染
+      vm.$el = vm.__patch__(prevVnode, vnode) // 渲染VNode树 - 更新渲染
     }
     restoreActiveInstance() // 恢复正在激活的Vue实例
     // update __vue__ reference
@@ -235,7 +235,7 @@ export function mountComponent (
 
   // manually mounted instance, call mounted on self
   // mounted is called for render-created child components in its inserted hook
-  if (vm.$vnode == null) { // TODO: $vnode什么情况下为null
+  if (vm.$vnode == null) { // $vnode是当前实例在其父实例中的占位节点，当vm是根实例时，$vnode为null
     vm._isMounted = true
     callHook(vm, 'mounted') // 挂载结束，触发mounted生命周期钩子
   }

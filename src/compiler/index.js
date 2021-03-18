@@ -1,3 +1,9 @@
+/*
+ * @Author:
+ * @Date: 2021-03-16 14:32:54
+ * @FilePath: /vue/src/compiler/index.js
+ * @Description: Do not edit
+ */
 /* @flow */
 
 import { parse } from './parser/index'
@@ -9,7 +15,7 @@ import { createCompilerCreator } from './create-compiler'
 // parser/optimizer/codegen, e.g the SSR optimizing compiler.
 // Here we just export a default compiler using the default parts.
 /**
- * createCompiler为编译函数及转换函数的工厂函数
+ * createCompiler为编译函数及转换函数的工厂函数，由工厂函数传入不同平台的编译基础配置
  */
 export const createCompiler = createCompilerCreator(function baseCompile ( // 处理模板，生成ASTElement树，生成render和静态render函数  template: 模板  options: 编译配置
   template: string,
