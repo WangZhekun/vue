@@ -39,10 +39,13 @@ type Resource = {
   asType: string;
 };
 
+/**
+ * HTML模板渲染对象，作用是将Vue实例渲染出的DOM字符串插入到HTMl模板中，并生成HTML中的其他部分，如<head>、css、js节点等
+ */
 export default class TemplateRenderer {
   options: TemplateRendererOptions;
   inject: boolean;
-  parsedTemplate: ParsedTemplate | Function | null;
+  parsedTemplate: ParsedTemplate | Function | null; // 用来
   publicPath: string;
   clientManifest: ClientManifest;
   preloadFiles: Array<Resource>;
@@ -55,9 +58,9 @@ export default class TemplateRenderer {
     this.inject = options.inject !== false
     // if no template option is provided, the renderer is created
     // as a utility object for rendering assets like preload links and scripts.
-    
-    const { template } = options
-    this.parsedTemplate = template
+
+    const { template } = options // template为将Vue实例渲染结果填装的HTML文件模板
+    this.parsedTemplate = template // 将template解析成head、neck、tail三部分组成的预编译模板对象对象
       ? typeof template === 'string'
         ? parseTemplate(template)
         : template
@@ -83,16 +86,26 @@ export default class TemplateRenderer {
     }
   }
 
+  /**
+   * 将当前TemplateRenderer实例的renderResourceHints、renderState、renderScripts、renderStyles、getPreloadFiles绑定所属对象后，植入到context中
+   * @param {Object} context 渲染上下文对象
+   */
   bindRenderFns (context: Object) {
     const renderer: any = this
-    ;['ResourceHints', 'State', 'Scripts', 'Styles'].forEach(type => {
+    ;['ResourceHints', 'State', 'Scripts', 'Styles'].forEach(type => { // 将当前实例的renderResourceHints、renderState、renderScripts、renderStyles方法，绑定所属对象后，植入到渲染向上下文对象中
       context[`render${type}`] = renderer[`render${type}`].bind(renderer, context)
     })
     // also expose getPreloadFiles, useful for HTTP/2 push
-    context.getPreloadFiles = renderer.getPreloadFiles.bind(renderer, context)
+    context.getPreloadFiles = renderer.getPreloadFiles.bind(renderer, context) // 将当前实例的getPreloadFiles方法，绑定所属对象后，植入到渲染上下文对象中
   }
 
   // render synchronously given rendered app content and render context
+  /**
+   * 将vue实例的渲染结果插入到模板中，并在模板中插入其他如head的内容、css、js等资源
+   * @param {string} content 渲染结果
+   * @param {Object} context 渲染上下文
+   * @returns
+   */
   render (content: string, context: ?Object): string | Promise<string> {
     const template = this.parsedTemplate
     if (!template) {
@@ -104,24 +117,24 @@ export default class TemplateRenderer {
       return template(content, context)
     }
 
-    if (this.inject) {
+    if (this.inject) { // 以注入的方式渲染
       return (
-        template.head(context) +
-        (context.head || '') +
-        this.renderResourceHints(context) +
-        this.renderStyles(context) +
-        template.neck(context) +
-        content +
-        this.renderState(context) +
-        this.renderScripts(context) +
-        template.tail(context)
+        template.head(context) + // 编译模板的</head>前的部分，使用渲染上下文对象填充
+        (context.head || '') + // 插入渲染上下文中的head的内容
+        this.renderResourceHints(context) + // 添加preload和prelink的资源的节点
+        this.renderStyles(context) + // 添加样式节点
+        template.neck(context) + // 编译模板的</head>到<!--vue-ssr-outlet-->前的部分
+        content + // 插入vue实例的渲染结果
+        this.renderState(context) + // 插入state的渲染结果
+        this.renderScripts(context) + // 插入js节点
+        template.tail(context) // 编译模板的<!--vue-ssr-outlet-->之后的部分
       )
-    } else {
+    } else { // 以非注入的方式渲染
       return (
-        template.head(context) +
-        template.neck(context) +
-        content +
-        template.tail(context)
+        template.head(context) + // 编译模板的</head>前的部分，使用渲染上下文对象填充
+        template.neck(context) + // 编译模板的</head>到<!--vue-ssr-outlet-->前的部分
+        content + // 插入vue实例的渲染结果
+        template.tail(context) // 编译模板的<!--vue-ssr-outlet-->之后的部分
       )
     }
   }

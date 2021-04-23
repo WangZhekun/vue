@@ -4,6 +4,9 @@ const Transform = require('stream').Transform
 import type TemplateRenderer from './index'
 import type { ParsedTemplate } from './parse-template'
 
+/**
+ * 模板文件的转换流对象，继承自Node的stream.Transform
+ */
 export default class TemplateStream extends Transform {
   started: boolean;
   renderer: TemplateRenderer;

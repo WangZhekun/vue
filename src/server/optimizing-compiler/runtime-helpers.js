@@ -28,6 +28,11 @@ const ssrHelpers = {
   _ssrStyle: renderSSRStyle
 }
 
+/**
+ * 给Vue的原型对象和函数式渲染上下文构造函数（FunctionalRenderContext）的原型对象中添加SSR相关的方法
+ * @param {Component} vm Vue实例
+ * @returns
+ */
 export function installSSRHelpers (vm: Component) {
   if (vm._ssrNode) {
     return
@@ -37,7 +42,7 @@ export function installSSRHelpers (vm: Component) {
     Vue = Vue.super
   }
   extend(Vue.prototype, ssrHelpers)
-  if (Vue.FunctionalRenderContext) {
+  if (Vue.FunctionalRenderContext) { // 函数式渲染上下文构造函数
     extend(Vue.FunctionalRenderContext.prototype, ssrHelpers)
   }
 }

@@ -13,9 +13,12 @@ const stream = require('stream')
 import { isTrue, isUndef } from 'shared/util'
 import { createWriteFunction } from './write'
 
+/**
+ * 渲染流，继承自Node的可读取数据的流
+ */
 export default class RenderStream extends stream.Readable {
   buffer: string;
-  render: (write: Function, done: Function) => void;
+  render: (write: Function, done: Function) => void; // render函数
   expectedSize: number;
   write: Function;
   next: Function;
@@ -28,9 +31,10 @@ export default class RenderStream extends stream.Readable {
     this.render = render
     this.expectedSize = 0
 
+    // 包装(text, next) => {}函数，并对传入该函数函数的text进行缓存
     this.write = createWriteFunction((text, next) => {
       const n = this.expectedSize
-      this.buffer += text
+      this.buffer += text // 每一部分渲染完成后的DOM片段被追加到buffer中
       if (this.buffer.length >= n) {
         this.next = next
         this.pushBySize(n)
@@ -41,23 +45,24 @@ export default class RenderStream extends stream.Readable {
       this.emit('error', err)
     })
 
-    this.end = () => {
+    this.end = () => { // Vue实例渲染结束时，调用end方法
       this.emit('beforeEnd')
       // the rendering is finished; we should push out the last of the buffer.
       this.done = true
-      this.push(this.buffer)
+      this.push(this.buffer) // 将剩余的渲染结果推入读取队列
     }
   }
 
   pushBySize (n: number) {
     const bufferToPush = this.buffer.substring(0, n)
     this.buffer = this.buffer.substring(n)
-    this.push(bufferToPush)
+    this.push(bufferToPush) // 将截取后的DOM片段推入读取队列
   }
 
+  // 执行渲染函数
   tryRender () {
     try {
-      this.render(this.write, this.end)
+      this.render(this.write, this.end) // 执行渲染函数
     } catch (e) {
       this.emit('error', e)
     }

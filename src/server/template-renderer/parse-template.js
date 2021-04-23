@@ -1,3 +1,9 @@
+/*
+ * @Author:
+ * @Date: 2021-03-27 15:54:22
+ * @FilePath: /vue/src/server/template-renderer/parse-template.js
+ * @Description: Do not edit
+ */
 /* @flow */
 
 const compile = require('lodash.template')
@@ -35,8 +41,8 @@ export function parseTemplate (
   }
 
   return {
-    head: compile(template.slice(0, i), compileOptions),
-    neck: compile(template.slice(i, j), compileOptions),
-    tail: compile(template.slice(j + contentPlaceholder.length), compileOptions)
+    head: compile(template.slice(0, i), compileOptions), // 模板的</head>之前的部分，生成预编译模板方法，可在模板中插入值，详见lodash的template api
+    neck: compile(template.slice(i, j), compileOptions), // 模板的</head>到<!--vue-ssr-outlet-->之前的位置
+    tail: compile(template.slice(j + contentPlaceholder.length), compileOptions) // 模板的<!--vue-ssr-outlet-->之后部分
   }
 }

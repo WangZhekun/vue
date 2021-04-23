@@ -29,18 +29,22 @@ const onCompilationError = (err, vm) => {
   throw new Error(`\n\u001b[31m${err}${trace}\u001b[39m\n`)
 }
 
+/**
+ * 如果vm中不存在render函数，则创建之，以及staticRenderFns函数
+ * @param {Component} vm Vue实例
+ */
 const normalizeRender = vm => {
   const { render, template, _scopeId } = vm.$options
-  if (isUndef(render)) {
-    if (template) {
-      const compiled = ssrCompileToFunctions(template, {
+  if (isUndef(render)) { // vm未定义render方法
+    if (template) { // vm存在模板
+      const compiled = ssrCompileToFunctions(template, { // 将模板编译成函数
         scopeId: _scopeId,
         warn: onCompilationError
       }, vm)
 
       vm.$options.render = compiled.render
       vm.$options.staticRenderFns = compiled.staticRenderFns
-    } else {
+    } else { // vm不存在模板，报错。根Vue实例用el挂载时，会把el节点本身当做模板
       throw new Error(
         `render function or template not defined in component: ${
           vm.$options.name || vm.$options._componentTag || 'anonymous'
@@ -50,15 +54,22 @@ const normalizeRender = vm => {
   }
 }
 
+/**
+ * 执行vm的serverPrefetch钩子，在钩子执行完毕后执行resolve函数
+ * @param {Component} vm Vue实例
+ * @param {Function} resolve 渲染函数
+ * @param {Function} reject 完成后的回调
+ * @returns
+ */
 function waitForServerPrefetch (vm, resolve, reject) {
-  let handlers = vm.$options.serverPrefetch
+  let handlers = vm.$options.serverPrefetch // 如果Vue实例的配置项中存在serverPrefetch钩子
   if (isDef(handlers)) {
     if (!Array.isArray(handlers)) handlers = [handlers]
     try {
       const promises = []
       for (let i = 0, j = handlers.length; i < j; i++) {
         const result = handlers[i].call(vm, vm)
-        if (result && typeof result.then === 'function') {
+        if (result && typeof result.then === 'function') { // 如果serverPrefetch钩子为异步方法，则在异步过程执行完毕之后再执行resolve函数
           promises.push(result)
         }
       }
@@ -71,17 +82,23 @@ function waitForServerPrefetch (vm, resolve, reject) {
   resolve()
 }
 
+/**
+ * 渲染vnode树
+ * @param {VNode} node 虚拟节点树
+ * @param {Boolean} isRoot 是否是根实例
+ * @param {Object} context 渲染上下文
+ */
 function renderNode (node, isRoot, context) {
   if (node.isString) {
-    renderStringNode(node, context)
+    renderStringNode(node, context) // 渲染文本类vnode
   } else if (isDef(node.componentOptions)) {
-    renderComponent(node, isRoot, context)
+    renderComponent(node, isRoot, context) // 渲染组件的占位vnode
   } else if (isDef(node.tag)) {
-    renderElement(node, isRoot, context)
-  } else if (isTrue(node.isComment)) {
-    if (isDef(node.asyncFactory)) {
+    renderElement(node, isRoot, context) // 渲染普通DOM节点对应的vnode
+  } else if (isTrue(node.isComment)) { // 渲染注释节点对应的vnode
+    if (isDef(node.asyncFactory)) { // 存在异步工厂函数
       // async component
-      renderAsyncComponent(node, isRoot, context)
+      renderAsyncComponent(node, isRoot, context) // 渲染异步组件
     } else {
       context.write(`<!--${node.text}-->`, context.next)
     }
@@ -406,12 +423,27 @@ function renderStartingTag (node: VNode, context) {
   return markup + '>'
 }
 
+/**
+ * 创建render函数
+ * @param {Array} modules 模块
+ * @param {Object}} directives 指令
+ * @param {Function} isUnaryTag
+ * @param {any} cache
+ * @returns render函数
+ */
 export function createRenderFunction (
   modules: Array<(node: VNode) => ?string>,
   directives: Object,
   isUnaryTag: Function,
   cache: any
 ) {
+  /**
+   * Vue实例渲染
+   * @param {Object} component Vue实例
+   * @param {Function} write
+   * @param {Object} userContext 自定义渲染上下文
+   * @param {Function} done 渲染完成后的回调
+   */
   return function render (
     component: Component,
     write: (text: string, next: Function) => void,
@@ -422,16 +454,18 @@ export function createRenderFunction (
     const context = new RenderContext({
       activeInstance: component,
       userContext,
-      write, done, renderNode,
+      write,
+      done,
+      renderNode,
       isUnaryTag, modules, directives,
       cache
     })
-    installSSRHelpers(component)
-    normalizeRender(component)
+    installSSRHelpers(component) // 给Vue的原型对象和函数式渲染上下文构造函数（FunctionalRenderContext）的原型对象中添加SSR相关的方法
+    normalizeRender(component) // 如果component中不存在render函数，则创建之，以及staticRenderFns函数
 
     const resolve = () => {
-      renderNode(component._render(), true, context)
+      renderNode(component._render(), true, context) // 编译component的模板，生成vnode树，并渲染vnode树
     }
-    waitForServerPrefetch(component, resolve, done)
+    waitForServerPrefetch(component, resolve, done) // 执行component的serverPrefetch钩子，在钩子执行完毕后执行resolve函数，出错则执行done。serverPrefetch钩子的时机与客户端渲染的beforeMount钩子类似
   }
 }
